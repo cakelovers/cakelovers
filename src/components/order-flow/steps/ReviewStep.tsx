@@ -65,7 +65,11 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       }
 
       setSubmittedOrderId(body.orderId)
-    } catch {
+    } catch (error) {
+      // Logged so a client-side init failure (e.g. missing Supabase env
+      // vars in this build) is distinguishable from a real network error
+      // instead of silently collapsing into the same generic message.
+      console.error("Order submission failed before reaching the server", error)
       setSubmitError("Could not reach the server. Check your connection and try again.")
     } finally {
       setIsSubmitting(false)

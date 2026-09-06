@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceRoleClient } from "@/lib/supabase/service-role"
-import { decodeDataUrl } from "@/lib/storage/data-url"
 import {
   MAX_REFERENCE_IMAGES,
   MAX_REFERENCE_IMAGE_BYTES,
@@ -70,7 +69,7 @@ export async function POST(
 
   const orderId = readField(formData, "orderId")
   const description = readField(formData, "description")?.trim() ?? ""
-  const previewImage = readField(formData, "previewImage")
+  const previewStoragePath = readField(formData, "previewStoragePath")
   const previewPrompt = readField(formData, "previewPrompt")
   const pickupDate = readField(formData, "pickupDate")
   const pickupTime = readField(formData, "pickupTime")
@@ -85,7 +84,7 @@ export async function POST(
   if (description.length < MIN_DESCRIPTION_LENGTH || description.length > MAX_DESCRIPTION_LENGTH) {
     return errorResponse(400, "invalid_description", "Please provide a valid design description.")
   }
-  if (!previewImage || !previewImage.startsWith("data:image/")) {
+  if (!previewStoragePath) {
     return errorResponse(
       400,
       "missing_preview",
@@ -130,7 +129,7 @@ export async function POST(
         return errorResponse(
           400,
           "reference_too_large",
-          `Reference photo ${position} is too large — please keep each photo under 5MB.`
+          `Reference photo ${position} is too large — please keep each photo under 4MB.`
         )
       }
       referenceFiles.push({ position, file: value })
@@ -147,6 +146,15 @@ export async function POST(
 
   if (storeError || !store) {
     return errorResponse(404, "store_not_found", "This store could not be found.")
+  }
+
+  // The preview was already uploaded by a prior call to
+  // .../ai-preview/save (see that route for why — this is the fix for
+  // FUNCTION_PAYLOAD_TOO_LARGE). All this route gets is the resulting
+  // path string; confirm it actually belongs to this store+order rather
+  // than trusting an arbitrary client-supplied path verbatim.
+  if (!previewStoragePath.startsWith(`${store.id}/${orderId}/`)) {
+    return errorResponse(400, "invalid_preview_data", "The selected preview image is invalid.")
   }
 
   // --- Idempotent replay: this exact order may already have been submitted ---
@@ -195,39 +203,7 @@ export async function POST(
     customerId = newCustomer.id
   }
 
-  // --- Upload the selected AI preview (mandatory — see schema NOT NULL) ---
   const serviceRole = createServiceRoleClient()
-
-  let previewBuffer: { buffer: Buffer; contentType: string }
-  try {
-    previewBuffer = decodeDataUrl(previewImage)
-  } catch {
-    return errorResponse(400, "invalid_preview_data", "The selected preview image is invalid.")
-  }
-
-  const previewExtension = extensionForMimeType(previewBuffer.contentType) ?? "png"
-  const previewPath = `${store.id}/${orderId}/preview.${previewExtension}`
-
-  // upsert: true is deliberate — two near-simultaneous submits with the
-  // same orderId (a double-tap race) both compute this exact same path.
-  // Without upsert, the second request's upload would fail here before
-  // it ever reaches the duplicate-order check below that's supposed to
-  // handle that race gracefully.
-  const { error: previewUploadError } = await serviceRole.storage
-    .from(PREVIEW_BUCKET)
-    .upload(previewPath, previewBuffer.buffer, {
-      contentType: previewBuffer.contentType,
-      upsert: true,
-    })
-
-  if (previewUploadError) {
-    console.error("[orders] preview upload failed", previewUploadError)
-    return errorResponse(
-      502,
-      "preview_upload_failed",
-      "Could not save your selected preview. Please try again."
-    )
-  }
 
   // --- Create the order -------------------------------------------------
   const { error: orderInsertError } = await supabase.from("orders").insert({
@@ -237,7 +213,7 @@ export async function POST(
     description,
     pickup_date: pickupDate,
     pickup_time: pickupTime,
-    ai_preview_storage_path: previewPath,
+    ai_preview_storage_path: previewStoragePath,
     ai_preview_prompt: previewPrompt,
     customer_note: customerNote || null,
   })
@@ -246,14 +222,14 @@ export async function POST(
     // Unique-violation on `id` means we lost a race to an identical
     // concurrent submit (e.g. a double-tap) — that other request's
     // order is the real one, and it points at the exact same preview
-    // path we just (re-)wrote, so do NOT delete it here.
+    // path, so do NOT delete it here.
     if (orderInsertError.code === "23505") {
       return NextResponse.json({ orderId })
     }
 
     // Genuine failure, not a race — nothing will ever reference this
     // upload, so roll it back.
-    await serviceRole.storage.from(PREVIEW_BUCKET).remove([previewPath])
+    await serviceRole.storage.from(PREVIEW_BUCKET).remove([previewStoragePath])
     console.error("[orders] order insert failed", orderInsertError)
     return errorResponse(500, "order_create_failed", "Could not submit your order. Please try again.")
   }

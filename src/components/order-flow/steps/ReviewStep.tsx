@@ -35,10 +35,29 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       // authorized against it.
       await ensureAnonymousSession()
 
+      // Upload the selected preview separately, first. Sending its
+      // ~1.5-2.5MB base64 payload in the same request as the final
+      // order (plus any reference photos) risks exceeding Vercel's
+      // 4.5MB serverless function body limit
+      // (FUNCTION_PAYLOAD_TOO_LARGE) — splitting it out keeps every
+      // request comfortably small regardless of how many reference
+      // photos are attached.
+      const previewRes = await fetch(`/api/stores/${storeSlug}/ai-preview/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, previewImage: data.selectedPreviewImage }),
+      })
+      const previewBody = await previewRes.json()
+
+      if (!previewRes.ok) {
+        setSubmitError(previewBody?.error?.message ?? "Could not save your selected preview. Please try again.")
+        return
+      }
+
       const formData = new FormData()
       formData.set("orderId", orderId)
       formData.set("description", data.description)
-      formData.set("previewImage", data.selectedPreviewImage ?? "")
+      formData.set("previewStoragePath", previewBody.storagePath)
       formData.set("previewPrompt", data.selectedPreviewPrompt ?? "")
       formData.set("pickupDate", data.pickupDate)
       formData.set("pickupTime", data.pickupTime)

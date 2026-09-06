@@ -1,6 +1,7 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState } from "react"
+import { compressReferenceImage } from "@/lib/images/compress-reference-image"
 import type { ReferenceImageSlot } from "../types"
 
 interface ReferenceImagesStepProps {
@@ -10,13 +11,79 @@ interface ReferenceImagesStepProps {
 
 const SLOT_INDEXES = [0, 1, 2] as const
 
+// After client-side compression a real photo is well under 1MB. Anything
+// still above this is almost certainly a format the browser couldn't
+// re-encode (so compressReferenceImage returned the original) — reject
+// it here with a clear message instead of letting the upload fail with a
+// 400 (app check) or 413 (Vercel body limit). Kept in sync with
+// MAX_REFERENCE_IMAGE_BYTES in src/lib/storage/reference-image.ts.
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+
+function replaceAt<T>(list: T[], index: number, value: T): T[] {
+  const next = [...list]
+  next[index] = value
+  return next
+}
+
 export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepProps) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const [processing, setProcessing] = useState<boolean[]>([false, false, false])
+  const [errors, setErrors] = useState<(string | null)[]>([null, null, null])
 
-  function handleFileSelect(index: number, file: File | null) {
+  function clearSlot(index: number) {
     const next = [...images]
-    next[index] = file ? { file, previewUrl: URL.createObjectURL(file) } : null
+    const existing = next[index]
+    if (existing) URL.revokeObjectURL(existing.previewUrl)
+    next[index] = null
     onChange(next)
+    setErrors((prev) => replaceAt(prev, index, null))
+  }
+
+  async function handleFileSelect(index: number, file: File | null) {
+    if (!file) {
+      clearSlot(index)
+      return
+    }
+
+    setErrors((prev) => replaceAt(prev, index, null))
+    setProcessing((prev) => replaceAt(prev, index, true))
+
+    try {
+      // Downscale + re-encode in the browser so the photo lands under
+      // both the app's 4MiB check and Vercel's 4.5MB serverless body
+      // limit. Best-effort: on failure this returns the original file.
+      const prepared = await compressReferenceImage(file)
+
+      if (prepared.size > MAX_UPLOAD_BYTES) {
+        setErrors((prev) =>
+          replaceAt(
+            prev,
+            index,
+            "This photo is too large to upload. Please try a different one."
+          )
+        )
+        return
+      }
+
+      const next = [...images]
+      const existing = next[index]
+      if (existing) URL.revokeObjectURL(existing.previewUrl)
+      next[index] = { file: prepared, previewUrl: URL.createObjectURL(prepared) }
+      onChange(next)
+    } catch {
+      setErrors((prev) =>
+        replaceAt(
+          prev,
+          index,
+          "Could not process this photo. Please try a different one."
+        )
+      )
+    } finally {
+      setProcessing((prev) => replaceAt(prev, index, false))
+      // Let the user re-pick the same file after an error.
+      const input = inputRefs.current[index]
+      if (input) input.value = ""
+    }
   }
 
   return (
@@ -32,14 +99,22 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
       <div className="grid grid-cols-3 gap-2">
         {SLOT_INDEXES.map((index) => {
           const slot = images[index]
+          const isProcessing = processing[index]
+          const error = errors[index]
           return (
             <div key={index} className="flex flex-col gap-1">
               <button
                 type="button"
+                disabled={isProcessing}
                 onClick={() => inputRefs.current[index]?.click()}
-                className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border border-dashed bg-muted/40 text-2xl text-muted-foreground"
+                className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border border-dashed bg-muted/40 text-2xl text-muted-foreground disabled:opacity-60"
               >
-                {slot ? (
+                {isProcessing ? (
+                  <span
+                    aria-label="Processing photo"
+                    className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
+                  />
+                ) : slot ? (
                   // eslint-disable-next-line @next/next/no-img-element -- local blob: preview, next/image can't optimize object URLs
                   <img
                     src={slot.previewUrl}
@@ -60,7 +135,10 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
                 className="hidden"
                 onChange={(e) => handleFileSelect(index, e.target.files?.[0] ?? null)}
               />
-              {slot && (
+              {error && (
+                <p className="text-center text-xs text-destructive">{error}</p>
+              )}
+              {slot && !isProcessing && (
                 <button
                   type="button"
                   onClick={() => handleFileSelect(index, null)}

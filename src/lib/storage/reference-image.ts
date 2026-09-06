@@ -12,6 +12,14 @@
 // guarantee staying under the ceiling with multiple large photos
 // attached — see the FUNCTION_PAYLOAD_TOO_LARGE fix notes on
 // src/app/api/stores/[storeSlug]/orders/route.ts.
+//
+// As of the client-compression change, the browser downscales and
+// re-encodes every reference photo to JPEG (~3MB target) BEFORE upload
+// — see src/lib/images/compress-reference-image.ts. That is now the
+// first line of defense against both this 4MiB check and Vercel's
+// 4.5MB body limit; the checks below stay as the server-side backstop
+// for clients that bypass or fail compression. This value must remain
+// below Vercel's 4.5MB request-body ceiling.
 
 export const MAX_REFERENCE_IMAGES = 3
 export const MAX_REFERENCE_IMAGE_BYTES = 4 * 1024 * 1024

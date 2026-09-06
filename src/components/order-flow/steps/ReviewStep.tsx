@@ -54,6 +54,36 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
         return
       }
 
+      // Upload each attached reference photo separately too, same reason
+      // as the preview image above — with up to 3 real photos, bundling
+      // them as binary multipart parts into the final /orders request
+      // reliably exceeded Vercel's 4.5MB limit even after the preview
+      // fix alone. Best-effort: a single photo failing to upload
+      // shouldn't block the rest of the order.
+      const referenceStoragePaths: { position: number; storagePath: string }[] = []
+      for (let index = 0; index < data.referenceImages.length; index++) {
+        const slot = data.referenceImages[index]
+        if (!slot) continue
+
+        const position = index + 1
+        const refFormData = new FormData()
+        refFormData.set("orderId", orderId)
+        refFormData.set("position", String(position))
+        refFormData.set("file", slot.file)
+
+        const refRes = await fetch(`/api/stores/${storeSlug}/reference-images/save`, {
+          method: "POST",
+          body: refFormData,
+        })
+
+        if (refRes.ok) {
+          const refBody = await refRes.json()
+          referenceStoragePaths.push({ position, storagePath: refBody.storagePath })
+        } else {
+          console.error(`Reference photo ${position} failed to upload; continuing without it`)
+        }
+      }
+
       const formData = new FormData()
       formData.set("orderId", orderId)
       formData.set("description", data.description)
@@ -66,10 +96,8 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       formData.set("email", data.email)
       formData.set("customerNote", data.customerNote)
 
-      data.referenceImages.forEach((slot, index) => {
-        if (slot) {
-          formData.set(`reference_${index + 1}`, slot.file)
-        }
+      referenceStoragePaths.forEach(({ position, storagePath }) => {
+        formData.set(`reference_${position}_path`, storagePath)
       })
 
       const res = await fetch(`/api/stores/${storeSlug}/orders`, {

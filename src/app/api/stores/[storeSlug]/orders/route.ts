@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceRoleClient } from "@/lib/supabase/service-role"
-import {
-  MAX_REFERENCE_IMAGES,
-  MAX_REFERENCE_IMAGE_BYTES,
-  extensionForMimeType,
-} from "@/lib/storage/reference-image"
+import { MAX_REFERENCE_IMAGES } from "@/lib/storage/reference-image"
 import {
   MIN_DESCRIPTION_LENGTH,
   MAX_DESCRIPTION_LENGTH,
@@ -16,7 +12,6 @@ const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const PREVIEW_BUCKET = "ai-previews"
-const REFERENCE_BUCKET = "reference-images"
 
 function errorResponse(status: number, code: string, message: string) {
   return NextResponse.json({ error: { code, message } }, { status })
@@ -114,25 +109,15 @@ export async function POST(
     )
   }
 
-  const referenceFiles: { position: number; file: File }[] = []
+  // Reference photos were already uploaded individually via prior calls
+  // to .../reference-images/save (same FUNCTION_PAYLOAD_TOO_LARGE fix
+  // as the preview image — see that route). This request only ever
+  // carries the resulting path strings, never the binary files.
+  const referenceImagePaths: { position: number; storagePath: string }[] = []
   for (let position = 1; position <= MAX_REFERENCE_IMAGES; position++) {
-    const value = formData.get(`reference_${position}`)
-    if (value instanceof File && value.size > 0) {
-      if (!extensionForMimeType(value.type)) {
-        return errorResponse(
-          400,
-          "invalid_reference_type",
-          `Reference photo ${position} must be a JPEG, PNG, WebP, or HEIC image.`
-        )
-      }
-      if (value.size > MAX_REFERENCE_IMAGE_BYTES) {
-        return errorResponse(
-          400,
-          "reference_too_large",
-          `Reference photo ${position} is too large — please keep each photo under 4MB.`
-        )
-      }
-      referenceFiles.push({ position, file: value })
+    const value = readField(formData, `reference_${position}_path`)
+    if (value) {
+      referenceImagePaths.push({ position, storagePath: value })
     }
   }
 
@@ -155,6 +140,14 @@ export async function POST(
   // than trusting an arbitrary client-supplied path verbatim.
   if (!previewStoragePath.startsWith(`${store.id}/${orderId}/`)) {
     return errorResponse(400, "invalid_preview_data", "The selected preview image is invalid.")
+  }
+
+  // Same check for each reference photo path, already uploaded by a
+  // prior call to .../reference-images/save.
+  for (const { storagePath } of referenceImagePaths) {
+    if (!storagePath.startsWith(`${store.id}/${orderId}/`)) {
+      return errorResponse(400, "invalid_reference_data", "One of the reference photos is invalid.")
+    }
   }
 
   // --- Idempotent replay: this exact order may already have been submitted ---
@@ -234,30 +227,15 @@ export async function POST(
     return errorResponse(500, "order_create_failed", "Could not submit your order. Please try again.")
   }
 
-  // --- Upload reference images (best-effort, non-blocking per file) ----
-  // The order above is already complete and valid without these — a
-  // failed reference photo shouldn't undo a successful order.
-  const uploadedReferenceRows: { position: number; storagePath: string }[] = []
-
-  for (const { position, file } of referenceFiles) {
-    const extension = extensionForMimeType(file.type)!
-    const path = `${store.id}/${orderId}/${position}.${extension}`
-    const arrayBuffer = await file.arrayBuffer()
-
-    const { error: uploadError } = await serviceRole.storage
-      .from(REFERENCE_BUCKET)
-      .upload(path, arrayBuffer, { contentType: file.type, upsert: false })
-
-    if (uploadError) {
-      console.error("[orders] reference image upload failed", position, uploadError)
-      continue
-    }
-    uploadedReferenceRows.push({ position, storagePath: path })
-  }
-
-  if (uploadedReferenceRows.length > 0) {
+  // --- Record reference images (already uploaded, best-effort insert) --
+  // Each photo was uploaded individually by a prior call to
+  // .../reference-images/save (same fix as the preview image — see that
+  // route). This route only records the resulting paths; the order
+  // above is already complete and valid without these, so a failed
+  // insert here shouldn't undo a successful order.
+  if (referenceImagePaths.length > 0) {
     const { error: referenceInsertError } = await supabase.from("reference_images").insert(
-      uploadedReferenceRows.map((row) => ({
+      referenceImagePaths.map((row) => ({
         store_id: store.id,
         order_id: orderId,
         storage_path: row.storagePath,

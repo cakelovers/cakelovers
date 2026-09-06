@@ -11,6 +11,24 @@ interface ReferenceImagesStepProps {
 
 const SLOT_INDEXES = [0, 1, 2] as const
 
+// Formats the upload pipeline can turn into a stored JPEG: the browser
+// re-encodes these itself, or — for HEIC/HEIF that a non-Safari browser
+// can't decode — the server does (see
+// src/app/api/stores/[storeSlug]/reference-images/save/route.ts). An
+// empty type is let through for the server to sniff (common for HEIC
+// picked from a file provider). Anything else (SVG, PDFs or videos
+// picked by mistake) is rejected here so the customer finds out
+// immediately, on this step, instead of at submit time.
+const ACCEPTED_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+  "image/heic-sequence",
+  "",
+])
+
 // After client-side compression a real photo is well under 1MB. Anything
 // still above this is almost certainly a format the browser couldn't
 // re-encode (so compressReferenceImage returned the original) — reject
@@ -51,8 +69,20 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
     try {
       // Downscale + re-encode in the browser so the photo lands under
       // both the app's 4MiB check and Vercel's 4.5MB serverless body
-      // limit. Best-effort: on failure this returns the original file.
+      // limit. Best-effort: on failure this returns the original file,
+      // which the server then normalizes.
       const prepared = await compressReferenceImage(file)
+
+      if (!ACCEPTED_TYPES.has(prepared.type.toLowerCase())) {
+        setErrors((prev) =>
+          replaceAt(
+            prev,
+            index,
+            "This photo format isn't supported. Please choose a JPEG or PNG."
+          )
+        )
+        return
+      }
 
       if (prepared.size > MAX_UPLOAD_BYTES) {
         setErrors((prev) =>

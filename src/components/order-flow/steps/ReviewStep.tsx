@@ -58,9 +58,9 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       // as the preview image above — with up to 3 real photos, bundling
       // them as binary multipart parts into the final /orders request
       // reliably exceeded Vercel's 4.5MB limit even after the preview
-      // fix alone. Best-effort: a single photo failing to upload
-      // shouldn't block the rest of the order.
+      // fix alone.
       const referenceStoragePaths: { position: number; storagePath: string }[] = []
+      const failedReferencePositions: number[] = []
       for (let index = 0; index < data.referenceImages.length; index++) {
         const slot = data.referenceImages[index]
         if (!slot) continue
@@ -71,17 +71,34 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
         refFormData.set("position", String(position))
         refFormData.set("file", slot.file)
 
-        const refRes = await fetch(`/api/stores/${storeSlug}/reference-images/save`, {
-          method: "POST",
-          body: refFormData,
-        })
-
-        if (refRes.ok) {
-          const refBody = await refRes.json()
-          referenceStoragePaths.push({ position, storagePath: refBody.storagePath })
-        } else {
-          console.error(`Reference photo ${position} failed to upload; continuing without it`)
+        try {
+          const refRes = await fetch(`/api/stores/${storeSlug}/reference-images/save`, {
+            method: "POST",
+            body: refFormData,
+          })
+          if (refRes.ok) {
+            const refBody = await refRes.json()
+            referenceStoragePaths.push({ position, storagePath: refBody.storagePath })
+          } else {
+            failedReferencePositions.push(position)
+          }
+        } catch {
+          failedReferencePositions.push(position)
         }
+      }
+
+      // A reference photo that failed to upload is not skipped silently:
+      // stop here so the customer can remove or replace it rather than
+      // submit an order that's missing a photo they attached.
+      if (failedReferencePositions.length > 0) {
+        const list = failedReferencePositions.join(", ")
+        const one = failedReferencePositions.length === 1
+        setSubmitError(
+          `Reference ${one ? "photo" : "photos"} ${list} couldn't be uploaded. ` +
+            `Go back to the Reference Photos step and remove ${one ? "it" : "them"} ` +
+            `or choose a different image, then submit again.`
+        )
+        return
       }
 
       const formData = new FormData()

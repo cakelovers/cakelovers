@@ -17,13 +17,17 @@
 // Reference photos only need to convey colour and style, not archival
 // detail, so we downscale the longest edge to `maxEdge` and re-encode
 // as JPEG — typically a 10-30x size reduction — so every upload lands
-// comfortably under both limits. Output is always image/jpeg, which
-// also sidesteps the HEIC/HEIF files iPhones produce that the Storage
-// bucket's MIME allowlist (jpeg|png|webp|heic) would reject.
+// comfortably under both limits.
 //
-// Best-effort by design: any decode/encode failure (e.g. a browser
-// that can't decode HEIC at all) returns the original File unchanged,
-// and the server-side validation stays as the backstop.
+// Best-effort by design: any decode/encode failure (e.g. a browser that
+// can't decode HEIC at all) returns the original File unchanged. That is
+// safe because the upload route
+// (src/app/api/stores/[storeSlug]/reference-images/save/route.ts) now
+// re-runs the same downscale-to-JPEG server-side via
+// src/lib/storage/normalize-image.ts, so a browser that can't decode
+// HEIC no longer means a lost photo. ReferenceImagesStep still rejects
+// obviously-unsupported formats up front so the customer gets an
+// immediate, actionable error rather than a failure at submit time.
 
 const DEFAULT_MAX_EDGE = 1600
 // Target well under the app's 4MiB check and Vercel's 4.5MB ceiling,
@@ -50,7 +54,9 @@ export async function compressReferenceImage(
   options: CompressReferenceImageOptions = {}
 ): Promise<File> {
   if (typeof window === "undefined") return file
-  if (!file.type.startsWith("image/")) return file
+  // An empty type is common for HEIC picked from a file provider — let
+  // it through to the decode attempt rather than shipping it raw.
+  if (file.type && !file.type.startsWith("image/")) return file
   if (file.size <= SKIP_IF_UNDER_BYTES && ALREADY_WEB_SAFE.has(file.type)) {
     return file
   }

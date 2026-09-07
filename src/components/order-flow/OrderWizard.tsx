@@ -145,6 +145,7 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
 
         {currentStep.id === "pickup" && (
           <PickupStep
+            storeSlug={storeSlug}
             pickupDate={data.pickupDate}
             pickupTime={data.pickupTime}
             onChange={updateData}

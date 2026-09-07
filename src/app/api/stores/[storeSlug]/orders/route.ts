@@ -7,6 +7,12 @@ import {
   MAX_DESCRIPTION_LENGTH,
   MAX_CUSTOMER_NOTE_LENGTH,
 } from "@/lib/validation/description"
+import {
+  resolvePickupSettings,
+  type PickupSettingsRow,
+  type PickupDaySettingsRow,
+} from "@/lib/admin/get-pickup-settings"
+import { isPickupSlotValid, nowInTimeZone } from "@/lib/validation/pickup"
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -132,13 +138,45 @@ export async function POST(
   // --- Resolve store ---------------------------------------------------
   const { data: store, error: storeError } = await supabase
     .from("stores")
-    .select("id")
+    .select("id, timezone")
     .eq("slug", storeSlug)
     .eq("is_active", true)
-    .maybeSingle()
+    .maybeSingle<{ id: string; timezone: string }>()
 
   if (storeError || !store) {
     return errorResponse(404, "store_not_found", "This store could not be found.")
+  }
+
+  // --- Validate pickup date/time against the store's own settings ------
+  // The customer picker (pickup-slots route) only ever offers slots this
+  // same check would also accept — this is the actual enforcement, not
+  // a formality, since a stale page or a direct API call could still
+  // submit something the picker no longer offers. Reads via
+  // service-role: pickup settings are members-only RLS (0007), and this
+  // request runs on the customer's own session, not staff's. The same
+  // client instance is reused below for the Storage rollback path.
+  const serviceRole = createServiceRoleClient()
+  const [{ data: intervalRow }, { data: dayRows }] = await Promise.all([
+    serviceRole
+      .from("store_pickup_settings")
+      .select("pickup_interval_minutes")
+      .eq("store_id", store.id)
+      .maybeSingle<PickupSettingsRow>(),
+    serviceRole
+      .from("store_pickup_day_settings")
+      .select("weekday, is_enabled, opening_time, closing_time, min_lead_hours")
+      .eq("store_id", store.id)
+      .returns<PickupDaySettingsRow[]>(),
+  ])
+  const pickupSettings = resolvePickupSettings(intervalRow, dayRows ?? [])
+  const now = nowInTimeZone(store.timezone)
+
+  if (!isPickupSlotValid(pickupSettings, now, pickupDate, pickupTime)) {
+    return errorResponse(
+      400,
+      "pickup_slot_unavailable",
+      "That pickup time is no longer available. Please go back and choose another."
+    )
   }
 
   // The preview was already uploaded by a prior call to
@@ -203,8 +241,6 @@ export async function POST(
     }
     customerId = newCustomer.id
   }
-
-  const serviceRole = createServiceRoleClient()
 
   // --- Create the order -------------------------------------------------
   const { error: orderInsertError } = await supabase.from("orders").insert({

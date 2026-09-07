@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { AiPreviewDisclaimer } from "@/components/AiPreviewDisclaimer"
 
 interface RegeneratePreviewStepProps {
   storeSlug: string
@@ -68,6 +69,8 @@ export function RegeneratePreviewStep({
           </p>
         )}
       </div>
+
+      <AiPreviewDisclaimer />
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 

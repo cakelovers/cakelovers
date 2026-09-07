@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { AiPreviewDisclaimer } from "@/components/AiPreviewDisclaimer"
 import { cn } from "@/lib/utils"
 
 interface SelectPreviewStepProps {
@@ -23,7 +24,7 @@ export function SelectPreviewStep({
       <div>
         <h2 className="text-lg font-semibold">Select your design</h2>
         <p className="text-sm text-muted-foreground">
-          This is the design the shop will build — reference photos later won&apos;t change it.
+          This is the design you&apos;re selecting for your order.
         </p>
       </div>
 
@@ -51,6 +52,8 @@ export function SelectPreviewStep({
           </span>
         )}
       </div>
+
+      <AiPreviewDisclaimer />
 
       <Button
         onClick={() =>

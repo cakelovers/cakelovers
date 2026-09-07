@@ -3,6 +3,7 @@ import { formatKrw, formatInTimeZone } from "@/lib/payments/format"
 import { DEFAULT_PAYMENT_DEADLINE_HOURS } from "@/lib/admin/get-payment-settings"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { AiPreviewDisclaimer } from "@/components/AiPreviewDisclaimer"
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -153,6 +154,7 @@ export default async function OrderTrackingPage({
         ) : (
           <p className="text-sm text-muted-foreground">Preview image unavailable.</p>
         )}
+        <AiPreviewDisclaimer />
       </section>
 
       <Card>

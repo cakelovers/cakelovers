@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ensureAnonymousSession } from "@/lib/supabase/ensure-session"
+import { canLeaveStep, stepBlockedReason } from "@/lib/validation/wizard-steps"
 import { WizardProgress } from "./WizardProgress"
 import { WIZARD_STEPS, type WizardData } from "./types"
 import { DescriptionStep } from "./steps/DescriptionStep"
@@ -38,6 +39,10 @@ interface OrderWizardProps {
 // docs/11_Customer_Order_Wizard.md for the full design.
 export function OrderWizard({ storeSlug }: OrderWizardProps) {
   const [stepIndex, setStepIndex] = useState(0)
+  // The furthest step reached so far — lets the progress bar allow
+  // jumping back to any visited step while still blocking a jump ahead
+  // of a step whose requirement (e.g. a selected design) isn't met yet.
+  const [furthestIndex, setFurthestIndex] = useState(0)
   const [data, setData] = useState<WizardData>(INITIAL_DATA)
   // Generated once per wizard session and carried through unchanged —
   // this becomes the literal `orders.id` at submit time and the storage
@@ -54,9 +59,15 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
     })
   }, [])
 
+  useEffect(() => {
+    setFurthestIndex((f) => Math.max(f, stepIndex))
+  }, [stepIndex])
+
   const currentStep = WIZARD_STEPS[stepIndex]
   const isFirstStep = stepIndex === 0
   const isLastStep = stepIndex === WIZARD_STEPS.length - 1
+  const canAdvance = canLeaveStep(currentStep.id, data)
+  const blockedReason = canAdvance ? null : stepBlockedReason(currentStep.id, data)
 
   function updateData(patch: Partial<WizardData>) {
     setData((prev) => ({ ...prev, ...patch }))
@@ -74,7 +85,12 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background">
       <header className="sticky top-0 z-10 border-b bg-background px-4 pt-4 pb-3">
         <p className="mb-2 text-xs text-muted-foreground">{storeSlug}</p>
-        <WizardProgress steps={WIZARD_STEPS} currentIndex={stepIndex} onStepClick={setStepIndex} />
+        <WizardProgress
+          steps={WIZARD_STEPS}
+          currentIndex={stepIndex}
+          maxReachableIndex={furthestIndex}
+          onStepClick={setStepIndex}
+        />
       </header>
 
       <main className="flex-1 overflow-y-auto px-4 py-6 pb-28">
@@ -140,6 +156,9 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
       </main>
 
       <footer className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-md border-t bg-background px-4 py-3">
+        {!isLastStep && blockedReason && (
+          <p className="mb-2 text-center text-xs text-muted-foreground">{blockedReason}</p>
+        )}
         <div className="flex gap-2">
           {!isFirstStep && (
             <Button variant="outline" className="flex-1" onClick={goBack}>
@@ -147,7 +166,7 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
             </Button>
           )}
           {!isLastStep && (
-            <Button className="flex-1" onClick={goNext}>
+            <Button className="flex-1" onClick={goNext} disabled={!canAdvance}>
               Next
             </Button>
           )}

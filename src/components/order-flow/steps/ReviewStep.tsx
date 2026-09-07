@@ -236,6 +236,12 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
         </div>
       </div>
 
+      {!data.selectedPreviewImage && (
+        <p className="text-sm text-destructive">
+          Go back and select a design before submitting.
+        </p>
+      )}
+
       {submitError && <p className="text-sm text-destructive">{submitError}</p>}
 
       <Button

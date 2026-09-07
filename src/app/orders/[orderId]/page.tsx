@@ -132,8 +132,8 @@ export default async function OrderTrackingPage({
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 p-4">
       <div>
-        <p className="text-xs text-muted-foreground">{store?.name ?? "Cake order"}</p>
-        <h1 className="text-lg font-semibold">Order status</h1>
+        <p className="text-xs text-muted-foreground">{store?.name ?? "케이크 주문"}</p>
+        <h1 className="text-lg font-semibold">주문 상태</h1>
       </div>
 
       <Badge className="w-fit">
@@ -143,16 +143,16 @@ export default async function OrderTrackingPage({
       <PaymentStatusBlock order={order} settings={paymentSettings} timezone={timezone} />
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-medium">Your design</h2>
+        <h2 className="font-medium">내 디자인</h2>
         {previewSigned?.signedUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL
           <img
             src={previewSigned.signedUrl}
-            alt="Your approved cake design"
+            alt="승인된 케이크 디자인"
             className="w-full max-w-sm rounded-md border object-cover"
           />
         ) : (
-          <p className="text-sm text-muted-foreground">Preview image unavailable.</p>
+          <p className="text-sm text-muted-foreground">미리보기 이미지를 불러올 수 없습니다.</p>
         )}
         <AiPreviewDisclaimer />
       </section>
@@ -160,24 +160,24 @@ export default async function OrderTrackingPage({
       <Card>
         <CardContent className="flex flex-col gap-3 text-sm">
           <div>
-            <span className="font-medium">Description: </span>
+            <span className="font-medium">설명: </span>
             {order.description}
           </div>
           {order.customer_note && (
             <div>
-              <span className="font-medium">Your note: </span>
+              <span className="font-medium">고객 메모: </span>
               {order.customer_note}
             </div>
           )}
           <div>
-            <span className="font-medium">Pickup: </span>
-            {order.pickup_date} at {order.pickup_time}
+            <span className="font-medium">픽업: </span>
+            {order.pickup_date} {order.pickup_time}
           </div>
         </CardContent>
       </Card>
 
       <section className="flex flex-col gap-1">
-        <h2 className="font-medium">Contact on file</h2>
+        <h2 className="font-medium">등록된 연락처</h2>
         <p className="text-sm">{customer?.name ?? "—"}</p>
         {customer?.phone && <p className="text-sm text-muted-foreground">{customer.phone}</p>}
         {customer?.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
@@ -293,10 +293,10 @@ function PaymentStatusBlock({
 function NotFoundMessage() {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-2 p-6 text-center">
-      <h1 className="text-lg font-semibold">Order not found</h1>
+      <h1 className="text-lg font-semibold">주문을 찾을 수 없습니다</h1>
       <p className="text-sm text-muted-foreground">
-        We couldn&apos;t find an order with that link. Double-check the link
-        from your confirmation, or contact the shop directly.
+        해당 링크로 주문을 찾을 수 없습니다. 주문 확인 메시지의 링크를
+        다시 확인하시거나 매장에 직접 문의해 주세요.
       </p>
     </div>
   )

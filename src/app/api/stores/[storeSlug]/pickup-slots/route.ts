@@ -41,7 +41,7 @@ export async function GET(
     .maybeSingle<{ id: string; timezone: string }>()
 
   if (storeError || !store) {
-    return errorResponse(404, "store_not_found", "This store could not be found.")
+    return errorResponse(404, "store_not_found", "매장을 찾을 수 없습니다.")
   }
 
   const [{ data: intervalRow }, { data: dayRows }] = await Promise.all([

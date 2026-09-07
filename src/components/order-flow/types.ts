@@ -34,13 +34,13 @@ export interface WizardData {
 }
 
 export const WIZARD_STEPS = [
-  { id: "description", label: "Description" },
-  { id: "generate", label: "AI Preview" },
-  { id: "regenerate", label: "Regenerate" },
-  { id: "select", label: "Select Design" },
-  { id: "references", label: "Reference Photos" },
-  { id: "pickup", label: "Pickup" },
-  { id: "review", label: "Review & Submit" },
+  { id: "description", label: "설명" },
+  { id: "generate", label: "AI 미리보기" },
+  { id: "regenerate", label: "다시 생성" },
+  { id: "select", label: "디자인 선택" },
+  { id: "references", label: "참고 사진" },
+  { id: "pickup", label: "픽업" },
+  { id: "review", label: "검토 및 제출" },
 ] as const
 
 export type WizardStepId = (typeof WIZARD_STEPS)[number]["id"]

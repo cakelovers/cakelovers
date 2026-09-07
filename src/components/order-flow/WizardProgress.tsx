@@ -25,7 +25,7 @@ export function WizardProgress({
       <div className="mb-1.5 flex items-center justify-between">
         <span className="text-sm font-medium">{steps[currentIndex].label}</span>
         <span className="text-xs text-muted-foreground">
-          Step {currentIndex + 1} of {steps.length}
+          {currentIndex + 1} / {steps.length}단계
         </span>
       </div>
       <div className="flex gap-1">

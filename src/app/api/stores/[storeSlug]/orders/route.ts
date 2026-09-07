@@ -56,7 +56,7 @@ export async function POST(
     return errorResponse(
       401,
       "not_authenticated",
-      "Your session has expired. Please reload the page and try again."
+      "세션이 만료되었습니다. 페이지를 새로고침한 후 다시 시도해 주세요."
     )
   }
 
@@ -65,7 +65,7 @@ export async function POST(
   try {
     formData = await request.formData()
   } catch {
-    return errorResponse(400, "invalid_form_data", "Request body must be multipart form data.")
+    return errorResponse(400, "invalid_form_data", "요청 형식이 올바르지 않습니다.")
   }
 
   const orderId = readField(formData, "orderId")
@@ -81,45 +81,45 @@ export async function POST(
   const privacyConsentAccepted = readField(formData, "privacyConsentAccepted") === "true"
 
   if (!orderId || !UUID_PATTERN.test(orderId)) {
-    return errorResponse(400, "invalid_order_id", "Missing or invalid order id.")
+    return errorResponse(400, "invalid_order_id", "주문 번호가 없거나 올바르지 않습니다.")
   }
   if (description.length < MIN_DESCRIPTION_LENGTH || description.length > MAX_DESCRIPTION_LENGTH) {
-    return errorResponse(400, "invalid_description", "Please provide a valid design description.")
+    return errorResponse(400, "invalid_description", "올바른 디자인 설명을 입력해 주세요.")
   }
   if (!previewStoragePath) {
     return errorResponse(
       400,
       "missing_preview",
-      "Please select an AI preview before submitting your order."
+      "주문을 제출하기 전에 AI 미리보기를 선택해 주세요."
     )
   }
   if (!previewPrompt) {
-    return errorResponse(400, "missing_preview_prompt", "Missing preview prompt.")
+    return errorResponse(400, "missing_preview_prompt", "미리보기 프롬프트가 없습니다.")
   }
   if (!pickupDate || Number.isNaN(Date.parse(pickupDate))) {
-    return errorResponse(400, "invalid_pickup_date", "Please choose a valid pickup date.")
+    return errorResponse(400, "invalid_pickup_date", "올바른 픽업 날짜를 선택해 주세요.")
   }
   if (!pickupTime || !/^\d{2}:\d{2}$/.test(pickupTime)) {
-    return errorResponse(400, "invalid_pickup_time", "Please choose a valid pickup time.")
+    return errorResponse(400, "invalid_pickup_time", "올바른 픽업 시간을 선택해 주세요.")
   }
   if (!name) {
-    return errorResponse(400, "missing_name", "Please enter your name.")
+    return errorResponse(400, "missing_name", "이름을 입력해 주세요.")
   }
   if (!phone && !email) {
-    return errorResponse(400, "missing_contact", "Please provide a phone number or email address.")
+    return errorResponse(400, "missing_contact", "전화번호 또는 이메일을 입력해 주세요.")
   }
   if (customerNote.length > MAX_CUSTOMER_NOTE_LENGTH) {
     return errorResponse(
       400,
       "customer_note_too_long",
-      `Please keep additional notes under ${MAX_CUSTOMER_NOTE_LENGTH} characters.`
+      `추가 메모는 ${MAX_CUSTOMER_NOTE_LENGTH}자 이하로 입력해 주세요.`
     )
   }
   if (!privacyConsentAccepted) {
     return errorResponse(
       400,
       "privacy_consent_required",
-      "Please agree to the privacy policy before submitting."
+      "제출하기 전에 개인정보처리방침에 동의해 주세요."
     )
   }
 
@@ -144,7 +144,7 @@ export async function POST(
     .maybeSingle<{ id: string; timezone: string }>()
 
   if (storeError || !store) {
-    return errorResponse(404, "store_not_found", "This store could not be found.")
+    return errorResponse(404, "store_not_found", "매장을 찾을 수 없습니다.")
   }
 
   // --- Validate pickup date/time against the store's own settings ------
@@ -175,7 +175,7 @@ export async function POST(
     return errorResponse(
       400,
       "pickup_slot_unavailable",
-      "That pickup time is no longer available. Please go back and choose another."
+      "선택하신 픽업 시간은 더 이상 이용할 수 없습니다. 다른 시간을 선택해 주세요."
     )
   }
 
@@ -185,14 +185,14 @@ export async function POST(
   // path string; confirm it actually belongs to this store+order rather
   // than trusting an arbitrary client-supplied path verbatim.
   if (!previewStoragePath.startsWith(`${store.id}/${orderId}/`)) {
-    return errorResponse(400, "invalid_preview_data", "The selected preview image is invalid.")
+    return errorResponse(400, "invalid_preview_data", "선택한 미리보기 이미지가 올바르지 않습니다.")
   }
 
   // Same check for each reference photo path, already uploaded by a
   // prior call to .../reference-images/save.
   for (const { storagePath } of referenceImagePaths) {
     if (!storagePath.startsWith(`${store.id}/${orderId}/`)) {
-      return errorResponse(400, "invalid_reference_data", "One of the reference photos is invalid.")
+      return errorResponse(400, "invalid_reference_data", "참고 사진 중 하나가 올바르지 않습니다.")
     }
   }
 
@@ -224,7 +224,7 @@ export async function POST(
     .maybeSingle()
 
   if (existingCustomerError) {
-    return errorResponse(500, "customer_lookup_failed", "Could not submit your order. Please try again.")
+    return errorResponse(500, "customer_lookup_failed", "주문을 제출하지 못했습니다. 다시 시도해 주세요.")
   }
 
   if (existingCustomer) {
@@ -237,7 +237,7 @@ export async function POST(
       .single()
 
     if (customerInsertError || !newCustomer) {
-      return errorResponse(500, "customer_create_failed", "Could not submit your order. Please try again.")
+      return errorResponse(500, "customer_create_failed", "주문을 제출하지 못했습니다. 다시 시도해 주세요.")
     }
     customerId = newCustomer.id
   }
@@ -269,7 +269,7 @@ export async function POST(
     // upload, so roll it back.
     await serviceRole.storage.from(PREVIEW_BUCKET).remove([previewStoragePath])
     console.error("[orders] order insert failed", orderInsertError)
-    return errorResponse(500, "order_create_failed", "Could not submit your order. Please try again.")
+    return errorResponse(500, "order_create_failed", "주문을 제출하지 못했습니다. 다시 시도해 주세요.")
   }
 
   // --- Record reference images (already uploaded, best-effort insert) --

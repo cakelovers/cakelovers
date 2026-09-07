@@ -33,7 +33,7 @@ export function InternalNoteForm({ storeSlug, orderId, initialNote }: InternalNo
 
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor="internal-note">Internal note (staff only)</Label>
+      <Label htmlFor="internal-note">내부 메모 (직원 전용)</Label>
       <Textarea
         id="internal-note"
         rows={3}
@@ -45,9 +45,9 @@ export function InternalNoteForm({ storeSlug, orderId, initialNote }: InternalNo
       />
       <div className="flex items-center gap-2">
         <Button type="button" size="sm" variant="outline" onClick={handleSave} disabled={isPending}>
-          {isPending ? "Saving…" : "Save note"}
+          {isPending ? "저장 중…" : "메모 저장"}
         </Button>
-        {saved && !isPending && <span className="text-sm text-muted-foreground">Saved</span>}
+        {saved && !isPending && <span className="text-sm text-muted-foreground">저장됨</span>}
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>

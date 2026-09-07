@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
+import { WEEKDAY_LABELS_KO } from "@/lib/copy/weekday"
 
 interface DaySlots {
   date: string
@@ -19,11 +20,9 @@ interface PickupStepProps {
   onChange: (patch: { pickupDate?: string; pickupTime?: string }) => void
 }
 
-const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"]
-
 function formatDayLabel(dateStr: string, weekday: number): string {
   const [, month, day] = dateStr.split("-")
-  return `${Number(month)}/${Number(day)} (${WEEKDAY_LABELS[weekday]})`
+  return `${Number(month)}/${Number(day)} (${WEEKDAY_LABELS_KO[weekday]})`
 }
 
 // Both stages of this picker only ever render what the server already
@@ -46,7 +45,7 @@ export function PickupStep({ storeSlug, pickupDate, pickupTime, onChange }: Pick
         if (cancelled) return
 
         if (!res.ok) {
-          setError(body?.error?.message ?? "Could not load pickup times.")
+          setError(body?.error?.message ?? "픽업 가능 시간을 불러오지 못했습니다.")
           return
         }
 
@@ -59,7 +58,7 @@ export function PickupStep({ storeSlug, pickupDate, pickupTime, onChange }: Pick
         })
       } catch {
         if (!cancelled) {
-          setError("Could not reach the server. Check your connection and try again.")
+          setError("서버에 연결할 수 없습니다. 연결 상태를 확인하고 다시 시도해 주세요.")
         }
       }
     }
@@ -87,16 +86,16 @@ export function PickupStep({ storeSlug, pickupDate, pickupTime, onChange }: Pick
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold">Pickup date &amp; time</h2>
+        <h2 className="text-lg font-semibold">픽업 날짜 및 시간</h2>
         <p className="text-sm text-muted-foreground">
-          Only times the shop can actually prepare your order for are shown.
+          매장에서 실제로 준비 가능한 시간만 표시됩니다.
         </p>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {!days && !error && (
-        <p className="text-sm text-muted-foreground">Loading available times…</p>
+        <p className="text-sm text-muted-foreground">픽업 가능 시간을 불러오는 중…</p>
       )}
 
       {days && days.every((d) => !d.isOpen) && (
@@ -149,7 +148,7 @@ export function PickupStep({ storeSlug, pickupDate, pickupTime, onChange }: Pick
               ))}
               {selectedDay.slots.length === 0 && (
                 <p className="col-span-4 text-sm text-muted-foreground">
-                  No times available this day.
+                  이 날짜에는 예약 가능한 시간이 없습니다.
                 </p>
               )}
             </div>

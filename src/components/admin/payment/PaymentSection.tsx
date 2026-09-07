@@ -50,7 +50,7 @@ export function PaymentSection({
 
   return (
     <section className="flex flex-col gap-3 rounded-md border p-3">
-      <h2 className="font-medium">결제 (Payment)</h2>
+      <h2 className="font-medium">결제</h2>
 
       {status === "pricing_pending" && (
         <EnterQuoteForm storeSlug={storeSlug} orderId={orderId} mode="create" />

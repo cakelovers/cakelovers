@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     return errorResponse(
       429,
       "rate_limited",
-      "You've reached the preview limit for now — please try again in a bit."
+      "지금은 미리보기 생성 한도에 도달했어요 — 잠시 후 다시 시도해 주세요."
     )
   }
 
@@ -32,13 +32,13 @@ export async function POST(request: Request) {
   try {
     body = await request.json()
   } catch {
-    return errorResponse(400, "invalid_json", "Request body must be valid JSON.")
+    return errorResponse(400, "invalid_json", "요청 형식이 올바르지 않습니다.")
   }
 
   const description = (body as { description?: unknown } | null)?.description
 
   if (typeof description !== "string") {
-    return errorResponse(400, "invalid_description", "A design description is required.")
+    return errorResponse(400, "invalid_description", "디자인 설명이 필요합니다.")
   }
 
   const trimmed = description.trim()
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     return errorResponse(
       400,
       "description_too_short",
-      `Please describe the cake in at least ${MIN_DESCRIPTION_LENGTH} characters.`
+      `케이크 설명을 ${MIN_DESCRIPTION_LENGTH}자 이상 입력해 주세요.`
     )
   }
 
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     return errorResponse(
       400,
       "description_too_long",
-      `Please keep the description under ${MAX_DESCRIPTION_LENGTH} characters.`
+      `설명은 ${MAX_DESCRIPTION_LENGTH}자 이하로 입력해 주세요.`
     )
   }
 
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       return errorResponse(
         500,
         "not_configured",
-        "The preview service is not available right now. Please try again later."
+        "지금은 미리보기 서비스를 이용할 수 없습니다. 잠시 후 다시 시도해 주세요."
       )
     }
 
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       return errorResponse(
         504,
         "timeout",
-        "Generating the preview took too long. Please try again."
+        "미리보기 생성 시간이 너무 오래 걸렸습니다. 다시 시도해 주세요."
       )
     }
 
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
         return errorResponse(
           429,
           "upstream_rate_limited",
-          "The preview service is busy right now — please try again shortly."
+          "지금은 미리보기 서비스가 혼잡합니다 — 잠시 후 다시 시도해 주세요."
         )
       }
 
@@ -95,18 +95,18 @@ export async function POST(request: Request) {
         return errorResponse(
           400,
           "rejected_prompt",
-          "That description couldn't be used to generate a preview — try rephrasing it."
+          "이 설명으로는 미리보기를 생성할 수 없습니다 — 다르게 표현해 보세요."
         )
       }
 
       return errorResponse(
         502,
         "upstream_error",
-        "Could not generate a preview right now. Please try again."
+        "지금은 미리보기를 생성할 수 없습니다. 다시 시도해 주세요."
       )
     }
 
     console.error("[ai-preview] unexpected error", error)
-    return errorResponse(500, "unknown_error", "Something went wrong. Please try again.")
+    return errorResponse(500, "unknown_error", "문제가 발생했습니다. 다시 시도해 주세요.")
   }
 }

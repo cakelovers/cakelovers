@@ -12,16 +12,16 @@ export function DescriptionStep({ value, onChange }: DescriptionStepProps) {
   return (
     <div className="flex flex-col gap-3">
       <div>
-        <h2 className="text-lg font-semibold">Describe your cake</h2>
+        <h2 className="text-lg font-semibold">케이크를 설명해 주세요</h2>
         <p className="text-sm text-muted-foreground">
-          Tell us what you have in mind — flavor, colors, theme, anything that helps.
+          맛, 색상, 테마 등 원하시는 내용을 자유롭게 적어주세요.
         </p>
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="description">Design description</Label>
+        <Label htmlFor="description">디자인 설명</Label>
         <Textarea
           id="description"
-          placeholder="A two-tier vanilla cake with pink buttercream flowers and 'Happy Birthday Mina' on top"
+          placeholder="예: 2단 바닐라 케이크, 핑크색 버터크림 꽃 장식, 위에 '민아 생일 축하해' 문구"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           maxLength={500}

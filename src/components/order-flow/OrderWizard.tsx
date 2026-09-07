@@ -208,12 +208,12 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
         <div className="flex gap-2">
           {!isFirstStep && (
             <Button variant="outline" className="flex-1" onClick={goBack}>
-              Back
+              이전
             </Button>
           )}
           {!isLastStep && (
             <Button className="flex-1" onClick={goNext} disabled={!canAdvance}>
-              Next
+              다음
             </Button>
           )}
         </div>

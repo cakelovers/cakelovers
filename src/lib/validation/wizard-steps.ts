@@ -27,14 +27,14 @@ export function stepBlockedReason(stepId: WizardStepId, data: WizardData): strin
   if (canLeaveStep(stepId, data)) return null
   switch (stepId) {
     case "description":
-      return `Please write at least ${MIN_DESCRIPTION_LENGTH} characters describing your cake.`
+      return `케이크에 대한 설명을 ${MIN_DESCRIPTION_LENGTH}자 이상 작성해 주세요.`
     case "generate":
     case "regenerate":
-      return "Generate a preview before continuing."
+      return "계속하려면 먼저 미리보기를 생성해 주세요."
     case "select":
-      return "Select a design before continuing."
+      return "계속하려면 디자인을 선택해 주세요."
     case "pickup":
-      return "Choose a pickup date and time before continuing."
+      return "계속하려면 픽업 날짜와 시간을 선택해 주세요."
     default:
       return null
   }

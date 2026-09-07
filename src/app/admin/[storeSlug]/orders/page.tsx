@@ -19,7 +19,7 @@ interface OrderListRow {
 
 function customerName(row: OrderListRow): string {
   const customers = Array.isArray(row.customers) ? row.customers[0] : row.customers
-  return customers?.name ?? "Unknown customer"
+  return customers?.name ?? "알 수 없는 고객"
 }
 
 export default async function OrdersPage({
@@ -60,10 +60,10 @@ export default async function OrdersPage({
 
   return (
     <div className="flex flex-col gap-3 p-4">
-      <h1 className="text-lg font-semibold">Orders</h1>
+      <h1 className="text-lg font-semibold">주문 목록</h1>
 
       {rows.length === 0 && (
-        <p className="text-sm text-muted-foreground">No orders yet.</p>
+        <p className="text-sm text-muted-foreground">아직 주문이 없습니다.</p>
       )}
 
       <div className="flex flex-col gap-2">
@@ -75,7 +75,7 @@ export default async function OrdersPage({
                   // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL, not a static asset
                   <img
                     src={thumbnailByPath.get(order.ai_preview_storage_path)}
-                    alt="Order preview"
+                    alt="주문 미리보기"
                     className="h-14 w-14 shrink-0 rounded object-cover"
                   />
                 ) : (

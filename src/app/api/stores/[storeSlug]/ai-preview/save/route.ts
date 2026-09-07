@@ -37,7 +37,7 @@ export async function POST(
     return errorResponse(
       401,
       "not_authenticated",
-      "Your session has expired. Please reload the page and try again."
+      "세션이 만료되었습니다. 페이지를 새로고침한 후 다시 시도해 주세요."
     )
   }
 
@@ -45,7 +45,7 @@ export async function POST(
   try {
     body = await request.json()
   } catch {
-    return errorResponse(400, "invalid_json", "Request body must be valid JSON.")
+    return errorResponse(400, "invalid_json", "요청 형식이 올바르지 않습니다.")
   }
 
   const { orderId, previewImage } = (body ?? {}) as {
@@ -54,10 +54,10 @@ export async function POST(
   }
 
   if (typeof orderId !== "string" || !UUID_PATTERN.test(orderId)) {
-    return errorResponse(400, "invalid_order_id", "Missing or invalid order id.")
+    return errorResponse(400, "invalid_order_id", "주문 번호가 없거나 올바르지 않습니다.")
   }
   if (typeof previewImage !== "string" || !previewImage.startsWith("data:image/")) {
-    return errorResponse(400, "invalid_preview_data", "A valid preview image is required.")
+    return errorResponse(400, "invalid_preview_data", "유효한 미리보기 이미지가 필요합니다.")
   }
 
   const { data: store, error: storeError } = await supabase
@@ -68,14 +68,14 @@ export async function POST(
     .maybeSingle()
 
   if (storeError || !store) {
-    return errorResponse(404, "store_not_found", "This store could not be found.")
+    return errorResponse(404, "store_not_found", "매장을 찾을 수 없습니다.")
   }
 
   let decoded: { buffer: Buffer; contentType: string }
   try {
     decoded = decodeDataUrl(previewImage)
   } catch {
-    return errorResponse(400, "invalid_preview_data", "The selected preview image is invalid.")
+    return errorResponse(400, "invalid_preview_data", "선택한 미리보기 이미지가 올바르지 않습니다.")
   }
 
   const extension = extensionForMimeType(decoded.contentType) ?? "png"
@@ -94,7 +94,7 @@ export async function POST(
     return errorResponse(
       502,
       "preview_upload_failed",
-      "Could not save your selected preview. Please try again."
+      "선택한 미리보기를 저장하지 못했습니다. 다시 시도해 주세요."
     )
   }
 

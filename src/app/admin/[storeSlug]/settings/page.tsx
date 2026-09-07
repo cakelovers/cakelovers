@@ -26,16 +26,16 @@ export default async function StoreSettingsPage({
         href={`/admin/${storeSlug}/orders`}
         className="text-sm text-muted-foreground underline"
       >
-        &larr; Back to orders
+        &larr; 주문 목록으로
       </Link>
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-lg font-semibold">Payment settings</h1>
+          <h1 className="text-lg font-semibold">결제 설정</h1>
           <p className="text-sm text-muted-foreground">
-            These bank details are inserted into the payment-request message you
-            send customers. The customer also sees them on their order page once a
-            quote is sent.
+            여기에 입력한 계좌 정보는 고객에게 보내는 결제 요청 메시지에
+            포함됩니다. 견적이 발송된 이후에는 고객도 본인의 주문 페이지에서
+            이 정보를 확인할 수 있습니다.
           </p>
         </div>
         <PaymentSettingsForm storeSlug={storeSlug} initial={settings} />

@@ -22,9 +22,9 @@ export function SelectPreviewStep({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold">Select your design</h2>
+        <h2 className="text-lg font-semibold">디자인 선택하기</h2>
         <p className="text-sm text-muted-foreground">
-          This is the design you&apos;re selecting for your order.
+          주문할 디자인을 선택하는 단계입니다.
         </p>
       </div>
 
@@ -38,17 +38,17 @@ export function SelectPreviewStep({
           // eslint-disable-next-line @next/next/no-img-element -- base64 data URL
           <img
             src={previewImage}
-            alt="AI-generated cake preview"
+            alt="AI가 생성한 케이크 미리보기"
             className="h-full w-full rounded-xl object-cover"
           />
         ) : (
           <p className="px-6 text-center text-sm text-muted-foreground">
-            Go back and generate a preview first
+            이전 단계로 돌아가서 먼저 미리보기를 생성해 주세요
           </p>
         )}
         {isSelected && (
           <span className="absolute top-2 right-2 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
-            Selected
+            선택됨
           </span>
         )}
       </div>
@@ -61,7 +61,7 @@ export function SelectPreviewStep({
         }
         disabled={!previewImage || !previewPrompt}
       >
-        Use This Design
+        이 디자인 선택하기
       </Button>
     </div>
   )

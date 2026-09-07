@@ -78,7 +78,7 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
           replaceAt(
             prev,
             index,
-            "This photo format isn't supported. Please choose a JPEG or PNG."
+            "지원하지 않는 사진 형식입니다. JPEG 또는 PNG 파일을 선택해 주세요."
           )
         )
         return
@@ -89,7 +89,7 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
           replaceAt(
             prev,
             index,
-            "This photo is too large to upload. Please try a different one."
+            "사진 용량이 너무 큽니다. 다른 사진을 선택해 주세요."
           )
         )
         return
@@ -105,7 +105,7 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
         replaceAt(
           prev,
           index,
-          "Could not process this photo. Please try a different one."
+          "사진을 처리하지 못했습니다. 다른 사진을 선택해 주세요."
         )
       )
     } finally {
@@ -119,10 +119,10 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold">Reference photos (optional)</h2>
+        <h2 className="text-lg font-semibold">참고 사진 (선택)</h2>
         <p className="text-sm text-muted-foreground">
-          Add up to 3 photos to help the shop match colors or style. This
-          won&apos;t change the design you already picked.
+          색상이나 스타일을 맞추는 데 도움이 되도록 사진을 최대 3장까지 첨부할 수
+          있어요. 이미 선택한 디자인은 바뀌지 않습니다.
         </p>
       </div>
 
@@ -141,14 +141,14 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
               >
                 {isProcessing ? (
                   <span
-                    aria-label="Processing photo"
+                    aria-label="사진 처리 중"
                     className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
                   />
                 ) : slot ? (
                   // eslint-disable-next-line @next/next/no-img-element -- local blob: preview, next/image can't optimize object URLs
                   <img
                     src={slot.previewUrl}
-                    alt={`Reference ${index + 1}`}
+                    alt={`참고 사진 ${index + 1}`}
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -174,7 +174,7 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
                   onClick={() => handleFileSelect(index, null)}
                   className="text-center text-xs text-muted-foreground underline"
                 >
-                  Remove
+                  삭제
                 </button>
               )}
             </div>
@@ -182,7 +182,7 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
         })}
       </div>
       <p className="text-center text-xs text-muted-foreground">
-        Optional — you can skip this step
+        선택 사항 — 건너뛰어도 됩니다
       </p>
     </div>
   )

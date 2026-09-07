@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { getStoreMembership } from "@/lib/admin/get-store-membership"
+import { WEEKDAY_LABELS_KO } from "@/lib/copy/weekday"
 
 interface ActionResult {
   error?: string
@@ -59,8 +60,6 @@ export async function savePaymentSettings(
   revalidatePath(`/admin/${storeSlug}/settings`)
   return { success: true }
 }
-
-const PICKUP_DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"]
 
 export interface PickupDayInput {
   isEnabled: boolean
@@ -129,13 +128,13 @@ export async function savePickupSettings(
         ? Number.parseInt(day.minLeadHours, 10)
         : day.minLeadHours
     if (!Number.isFinite(leadRaw) || leadRaw < 1 || leadRaw > 336) {
-      return { error: `${PICKUP_DAY_NAMES[weekday]}요일의 최소 준비 시간은 1~336시간 사이여야 합니다.` }
+      return { error: `${WEEKDAY_LABELS_KO[weekday]}요일의 최소 준비 시간은 1~336시간 사이여야 합니다.` }
     }
     if (!day.openingTime || !day.closingTime) {
-      return { error: `${PICKUP_DAY_NAMES[weekday]}요일의 오픈/마감 시간을 입력해 주세요.` }
+      return { error: `${WEEKDAY_LABELS_KO[weekday]}요일의 오픈/마감 시간을 입력해 주세요.` }
     }
     if (day.closingTime <= day.openingTime) {
-      return { error: `${PICKUP_DAY_NAMES[weekday]}요일의 마감 시간은 오픈 시간보다 늦어야 합니다.` }
+      return { error: `${WEEKDAY_LABELS_KO[weekday]}요일의 마감 시간은 오픈 시간보다 늦어야 합니다.` }
     }
 
     dayRows.push({

@@ -16,8 +16,7 @@ import {
   type PickupDayInput,
 } from "@/app/admin/[storeSlug]/settings/actions"
 import type { PickupSettings } from "@/lib/admin/get-pickup-settings"
-
-const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"]
+import { WEEKDAY_LABELS_KO } from "@/lib/copy/weekday"
 
 interface PickupSettingsFormProps {
   storeSlug: string
@@ -60,7 +59,7 @@ export function PickupSettingsForm({ storeSlug, initial }: PickupSettingsFormPro
   return (
     <div className="flex max-w-2xl flex-col gap-4">
       <div className="flex flex-col gap-2">
-        {DAY_LABELS.map((label, weekday) => {
+        {WEEKDAY_LABELS_KO.map((label, weekday) => {
           const day = days[weekday]
           return (
             <div

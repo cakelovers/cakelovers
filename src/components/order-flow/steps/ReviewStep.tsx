@@ -51,7 +51,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       const previewBody = await previewRes.json()
 
       if (!previewRes.ok) {
-        setSubmitError(previewBody?.error?.message ?? "Could not save your selected preview. Please try again.")
+        setSubmitError(previewBody?.error?.message ?? "선택한 디자인을 저장하지 못했습니다. 다시 시도해 주세요.")
         return
       }
 
@@ -93,11 +93,9 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       // submit an order that's missing a photo they attached.
       if (failedReferencePositions.length > 0) {
         const list = failedReferencePositions.join(", ")
-        const one = failedReferencePositions.length === 1
         setSubmitError(
-          `Reference ${one ? "photo" : "photos"} ${list} couldn't be uploaded. ` +
-            `Go back to the Reference Photos step and remove ${one ? "it" : "them"} ` +
-            `or choose a different image, then submit again.`
+          `참고 사진 (${list}번)을 업로드하지 못했습니다. ` +
+            `참고 사진 단계로 돌아가서 삭제하거나 다른 사진으로 바꾼 뒤 다시 제출해 주세요.`
         )
         return
       }
@@ -126,7 +124,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       const body = await res.json()
 
       if (!res.ok) {
-        setSubmitError(body?.error?.message ?? "Could not submit your order. Please try again.")
+        setSubmitError(body?.error?.message ?? "주문을 제출하지 못했습니다. 다시 시도해 주세요.")
         return
       }
 
@@ -137,7 +135,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       // vars in this build) is distinguishable from a real network error
       // instead of silently collapsing into the same generic message.
       console.error("Order submission failed before reaching the server", error)
-      setSubmitError("Could not reach the server. Check your connection and try again.")
+      setSubmitError("서버에 연결할 수 없습니다. 연결 상태를 확인하고 다시 시도해 주세요.")
     } finally {
       setIsSubmitting(false)
     }
@@ -146,13 +144,13 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
   if (submittedOrderId) {
     return (
       <div className="flex flex-col items-center gap-2 py-12 text-center">
-        <h2 className="text-lg font-semibold">Order submitted!</h2>
+        <h2 className="text-lg font-semibold">주문이 완료되었습니다!</h2>
         <p className="text-sm text-muted-foreground">
-          Your order has been received. Order reference:
+          주문이 접수되었습니다. 주문 번호:
         </p>
         <p className="font-mono text-xs text-muted-foreground">{submittedOrderId}</p>
         <Link href={`/orders/${submittedOrderId}`} className="text-sm underline">
-          View your order status
+          주문 상태 확인하기
         </Link>
       </div>
     )
@@ -161,37 +159,37 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold">Review &amp; submit</h2>
+        <h2 className="text-lg font-semibold">검토 및 제출</h2>
         <p className="text-sm text-muted-foreground">
-          Check everything looks right before submitting.
+          제출하기 전에 내용이 맞는지 확인해 주세요.
         </p>
       </div>
 
       <Card>
         <CardContent className="flex flex-col gap-3 text-sm">
           <div>
-            <span className="font-medium">Description: </span>
+            <span className="font-medium">설명: </span>
             {data.description || "—"}
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-medium">Selected design: </span>
+            <span className="font-medium">선택한 디자인: </span>
             {data.selectedPreviewImage ? (
               // eslint-disable-next-line @next/next/no-img-element -- base64 data URL
               <img
                 src={data.selectedPreviewImage}
-                alt="Selected cake preview"
+                alt="선택한 케이크 미리보기"
                 className="h-10 w-10 rounded-md object-cover"
               />
             ) : (
-              "Not selected"
+              "선택하지 않음"
             )}
           </div>
           <div>
-            <span className="font-medium">Reference photos: </span>
+            <span className="font-medium">참고 사진: </span>
             {referenceCount} / 3
           </div>
           <div>
-            <span className="font-medium">Pickup: </span>
+            <span className="font-medium">픽업: </span>
             {data.pickupDate || "—"} {data.pickupTime}
           </div>
         </CardContent>
@@ -199,7 +197,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="name">이름</Label>
           <Input
             id="name"
             value={data.name}
@@ -207,7 +205,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="phone">Phone</Label>
+          <Label htmlFor="phone">전화번호</Label>
           <Input
             id="phone"
             type="tel"
@@ -216,7 +214,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">이메일</Label>
           <Input
             id="email"
             type="email"
@@ -225,12 +223,12 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="customer-note">Additional notes (optional)</Label>
+          <Label htmlFor="customer-note">추가 메모 (선택)</Label>
           <Textarea
             id="customer-note"
             rows={3}
             placeholder={
-              'e.g. "No candles needed" or "Please contact me before pickup"'
+              '예: "촛불은 필요 없어요" 또는 "픽업 전에 연락 주세요"'
             }
             value={data.customerNote}
             onChange={(e) => onChange({ customerNote: e.target.value })}
@@ -241,7 +239,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
 
       {!data.selectedPreviewImage && (
         <p className="text-sm text-destructive">
-          Go back and select a design before submitting.
+          이전 단계로 돌아가서 디자인을 선택한 후 제출해 주세요.
         </p>
       )}
 
@@ -272,7 +270,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           !data.privacyConsentAccepted
         }
       >
-        {isSubmitting ? "Submitting…" : "Submit Order"}
+        {isSubmitting ? "제출 중…" : "주문 제출"}
       </Button>
     </div>
   )

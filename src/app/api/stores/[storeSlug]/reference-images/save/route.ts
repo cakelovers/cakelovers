@@ -54,7 +54,7 @@ export async function POST(
     return errorResponse(
       401,
       "not_authenticated",
-      "Your session has expired. Please reload the page and try again."
+      "세션이 만료되었습니다. 페이지를 새로고침한 후 다시 시도해 주세요."
     )
   }
 
@@ -62,7 +62,7 @@ export async function POST(
   try {
     formData = await request.formData()
   } catch {
-    return errorResponse(400, "invalid_form_data", "Request body must be multipart form data.")
+    return errorResponse(400, "invalid_form_data", "요청 형식이 올바르지 않습니다.")
   }
 
   const orderId = formData.get("orderId")
@@ -70,23 +70,23 @@ export async function POST(
   const file = formData.get("file")
 
   if (typeof orderId !== "string" || !UUID_PATTERN.test(orderId)) {
-    return errorResponse(400, "invalid_order_id", "Missing or invalid order id.")
+    return errorResponse(400, "invalid_order_id", "주문 번호가 없거나 올바르지 않습니다.")
   }
 
   const position = Number(positionRaw)
   if (!Number.isInteger(position) || position < 1 || position > MAX_REFERENCE_IMAGES) {
-    return errorResponse(400, "invalid_position", "Invalid reference photo position.")
+    return errorResponse(400, "invalid_position", "참고 사진 위치가 올바르지 않습니다.")
   }
 
   if (!(file instanceof File) || file.size === 0) {
-    return errorResponse(400, "missing_file", "A reference photo file is required.")
+    return errorResponse(400, "missing_file", "참고 사진 파일이 필요합니다.")
   }
 
   if (file.size > MAX_REFERENCE_IMAGE_BYTES) {
     return errorResponse(
       400,
       "reference_too_large",
-      "This photo is too large — please keep it under 4MB."
+      "사진 용량이 너무 큽니다 — 4MB 이하로 첨부해 주세요."
     )
   }
 
@@ -108,7 +108,7 @@ export async function POST(
     return errorResponse(
       400,
       "invalid_reference_type",
-      "Reference photo must be a JPEG, PNG, WebP, or HEIC image."
+      "참고 사진은 JPEG, PNG, WebP 또는 HEIC 형식이어야 합니다."
     )
   }
 
@@ -120,7 +120,7 @@ export async function POST(
     .maybeSingle()
 
   if (storeError || !store) {
-    return errorResponse(404, "store_not_found", "This store could not be found.")
+    return errorResponse(404, "store_not_found", "매장을 찾을 수 없습니다.")
   }
 
   // Normalize to a downscaled JPEG. A decode failure here means the
@@ -134,7 +134,7 @@ export async function POST(
     return errorResponse(
       400,
       "invalid_reference_type",
-      "This photo format isn't supported. Please choose a JPEG or PNG."
+      "지원하지 않는 사진 형식입니다. JPEG 또는 PNG 파일을 선택해 주세요."
     )
   }
 
@@ -153,7 +153,7 @@ export async function POST(
     return errorResponse(
       502,
       "reference_upload_failed",
-      "Could not save this reference photo. Please try again."
+      "참고 사진을 저장하지 못했습니다. 다시 시도해 주세요."
     )
   }
 

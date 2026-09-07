@@ -28,7 +28,7 @@ export default async function AdminLayout({
         <span className="font-semibold">{membership.storeName}</span>
         <div className="flex items-center gap-3">
           <Link href={`/admin/${storeSlug}/settings`} className="text-sm underline">
-            Settings
+            설정
           </Link>
           <SignOutButton />
         </div>

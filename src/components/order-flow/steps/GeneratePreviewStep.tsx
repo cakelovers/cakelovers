@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { AiPreviewDisclaimer } from "@/components/AiPreviewDisclaimer"
 
 interface GeneratePreviewStepProps {
   storeSlug: string
@@ -30,12 +31,12 @@ export function GeneratePreviewStep({
       })
       const body = await res.json()
       if (!res.ok) {
-        setError(body?.error?.message ?? "Could not generate a preview. Please try again.")
+        setError(body?.error?.message ?? "미리보기를 생성하지 못했습니다. 다시 시도해 주세요.")
         return
       }
       onGenerated({ image: body.image, prompt: body.prompt })
     } catch {
-      setError("Could not reach the preview service. Check your connection and try again.")
+      setError("미리보기 서비스에 연결할 수 없습니다. 연결 상태를 확인하고 다시 시도해 주세요.")
     } finally {
       setIsGenerating(false)
     }
@@ -44,7 +45,7 @@ export function GeneratePreviewStep({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold">Generate your preview</h2>
+        <h2 className="text-lg font-semibold">미리보기 생성하기</h2>
         <p className="line-clamp-2 text-sm text-muted-foreground">
           &ldquo;{description || "—"}&rdquo;
         </p>
@@ -52,20 +53,22 @@ export function GeneratePreviewStep({
 
       <div className="flex aspect-square w-full items-center justify-center rounded-xl border border-dashed bg-muted/40">
         {isGenerating ? (
-          <p className="text-sm text-muted-foreground">Generating preview…</p>
+          <p className="text-sm text-muted-foreground">미리보기 생성 중…</p>
         ) : previewImage ? (
           // eslint-disable-next-line @next/next/no-img-element -- base64 data URL, not a static asset next/image can optimize
           <img
             src={previewImage}
-            alt="AI-generated cake preview"
+            alt="AI가 생성한 케이크 미리보기"
             className="h-full w-full rounded-xl object-cover"
           />
         ) : (
           <p className="px-6 text-center text-sm text-muted-foreground">
-            No preview yet — tap Generate below
+            아직 미리보기가 없어요 — 아래 버튼을 눌러 생성해 주세요
           </p>
         )}
       </div>
+
+      <AiPreviewDisclaimer />
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
@@ -73,7 +76,7 @@ export function GeneratePreviewStep({
         onClick={handleGenerate}
         disabled={isGenerating || description.trim().length < 10}
       >
-        Generate Preview
+        미리보기 생성
       </Button>
     </div>
   )

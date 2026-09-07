@@ -60,10 +60,10 @@ export function dropdownStatusOptions(current: OrderStatus): OrderStatus[] {
   return [...new Set(options)]
 }
 
-// Korean labels — the single place status text is localized. The admin
-// UI still renders English elsewhere in V1, so `formatStatusLabel` keeps
-// its underscore-to-space fallback for any raw status string; the
-// customer-facing page has its own bespoke badge copy (docs/15 §4.2).
+// Korean labels — the single place status text is localized. The
+// customer-facing page has its own bespoke badge copy (docs/15 §4.2);
+// this map is what the admin dashboard's status dropdown and badge
+// render via formatStatusLabel() below.
 export const STATUS_LABELS: Record<OrderStatus, string> = {
   pricing_pending: "견적 대기",
   payment_pending: "입금 대기",
@@ -75,5 +75,5 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
 }
 
 export function formatStatusLabel(status: string): string {
-  return status.replace(/_/g, " ")
+  return STATUS_LABELS[status as OrderStatus] ?? status.replace(/_/g, " ")
 }

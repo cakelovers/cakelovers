@@ -151,7 +151,7 @@ export default async function OrderDetailPage({
   return (
     <div className="flex flex-col gap-5 p-4">
       <Link href={`/admin/${storeSlug}/orders`} className="text-sm text-muted-foreground underline">
-        &larr; Back to orders
+        &larr; 주문 목록으로
       </Link>
 
       <StatusUpdateForm storeSlug={storeSlug} orderId={orderId} currentStatus={order.status} />
@@ -171,26 +171,26 @@ export default async function OrderDetailPage({
       />
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-medium">AI-generated design (customer-approved)</h2>
+        <h2 className="font-medium">AI 생성 디자인 (고객 승인 완료)</h2>
         {previewSigned?.signedUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL
           <img
             src={previewSigned.signedUrl}
-            alt="Customer-approved AI cake design"
+            alt="고객이 승인한 AI 케이크 디자인"
             className="w-full max-w-sm rounded-md border object-cover"
           />
         ) : (
-          <p className="text-sm text-muted-foreground">Preview image unavailable.</p>
+          <p className="text-sm text-muted-foreground">미리보기 이미지를 불러올 수 없습니다.</p>
         )}
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-medium">Reference photos (production reference only)</h2>
+        <h2 className="font-medium">참고 사진 (제작 참고용)</h2>
         <p className="text-xs text-muted-foreground">
-          These are not the design — production aids only.
+          디자인이 아니라 제작을 돕기 위한 참고 자료입니다.
         </p>
         {refRows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No reference photos provided.</p>
+          <p className="text-sm text-muted-foreground">등록된 참고 사진이 없습니다.</p>
         ) : (
           <div className="flex gap-2">
             {refRows.map((ref) => {
@@ -200,7 +200,7 @@ export default async function OrderDetailPage({
                 <img
                   key={ref.id}
                   src={url}
-                  alt={`Reference photo ${ref.position}`}
+                  alt={`참고 사진 ${ref.position}`}
                   className="h-24 w-24 rounded-md border object-cover"
                 />
               ) : null
@@ -210,28 +210,28 @@ export default async function OrderDetailPage({
       </section>
 
       <section className="flex flex-col gap-1">
-        <h2 className="font-medium">Description</h2>
+        <h2 className="font-medium">설명</h2>
         <p className="text-sm">{order.description}</p>
       </section>
 
       {order.customer_note && (
         <section className="flex flex-col gap-1">
-          <h2 className="font-medium">Customer note</h2>
+          <h2 className="font-medium">고객 메모</h2>
           <p className="text-sm">{order.customer_note}</p>
         </section>
       )}
 
       <section className="flex flex-col gap-1">
-        <h2 className="font-medium">Customer</h2>
-        <p className="text-sm">{customer?.name ?? "Unknown"}</p>
+        <h2 className="font-medium">고객</h2>
+        <p className="text-sm">{customer?.name ?? "알 수 없음"}</p>
         {customer?.phone && <p className="text-sm text-muted-foreground">{customer.phone}</p>}
         {customer?.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
       </section>
 
       <section className="flex flex-col gap-1">
-        <h2 className="font-medium">Pickup</h2>
+        <h2 className="font-medium">픽업</h2>
         <p className="text-sm">
-          {order.pickup_date} at {order.pickup_time}
+          {order.pickup_date} {order.pickup_time}
         </p>
       </section>
 

@@ -6,6 +6,22 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+// Supabase's own SDK error messages arrive in English — this is the one
+// string in the app that can't be fixed with a direct literal edit.
+// Known cases get a Korean equivalent; anything unrecognized (a future
+// SDK message this list doesn't yet cover) falls back to one generic
+// Korean sentence rather than ever surfacing raw English.
+function mapAuthErrorToKorean(message: string): string {
+  const lower = message.toLowerCase()
+  if (lower.includes("rate limit") || lower.includes("too many requests")) {
+    return "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요."
+  }
+  if (lower.includes("invalid") && lower.includes("email")) {
+    return "올바른 이메일 주소를 입력해 주세요."
+  }
+  return "로그인 중 문제가 발생했습니다. 다시 시도해 주세요."
+}
+
 // Shop owner / staff sign-in only. Magic-link (OTP), no password — see
 // docs/05_MVP_Implementation_Plan.md §6.2. Customers never see this page.
 export default function LoginPage() {
@@ -28,7 +44,7 @@ export default function LoginPage() {
     setIsSubmitting(false)
 
     if (signInError) {
-      setError(signInError.message)
+      setError(mapAuthErrorToKorean(signInError.message))
       return
     }
     setSent(true)
@@ -37,9 +53,9 @@ export default function LoginPage() {
   if (sent) {
     return (
       <div className="mx-auto flex max-w-sm flex-col gap-2 p-6 text-center">
-        <h1 className="text-lg font-semibold">Check your email</h1>
+        <h1 className="text-lg font-semibold">이메일을 확인해 주세요</h1>
         <p className="text-sm text-muted-foreground">
-          We sent a sign-in link to {email}.
+          {email} 주소로 로그인 링크를 보내드렸어요.
         </p>
       </div>
     )
@@ -47,10 +63,10 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto flex max-w-sm flex-col gap-4 p-6">
-      <h1 className="text-lg font-semibold">Shop owner sign in</h1>
+      <h1 className="text-lg font-semibold">사장님 로그인</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">이메일</Label>
           <Input
             id="email"
             type="email"
@@ -61,7 +77,7 @@ export default function LoginPage() {
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Sending…" : "Send sign-in link"}
+          {isSubmitting ? "전송 중…" : "로그인 링크 보내기"}
         </Button>
       </form>
     </div>

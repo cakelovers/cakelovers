@@ -42,14 +42,14 @@ export async function updateOrderStatus(
     .maybeSingle()
 
   if (fetchError || !order) {
-    return { error: "Order not found." }
+    return { error: "주문을 찾을 수 없습니다." }
   }
 
   const currentStatus = order.status as OrderStatus
   const allowedNext = VALID_STATUS_TRANSITIONS[currentStatus] ?? []
 
   if (currentStatus !== newStatus && !allowedNext.includes(newStatus)) {
-    return { error: `Cannot move from "${currentStatus}" to "${newStatus}".` }
+    return { error: `"${currentStatus}" 상태에서 "${newStatus}" 상태로 변경할 수 없습니다.` }
   }
 
   const { error: updateError } = await supabase
@@ -59,7 +59,7 @@ export async function updateOrderStatus(
 
   if (updateError) {
     console.error("[admin] status update failed", updateError)
-    return { error: "Could not update order status. Please try again." }
+    return { error: "주문 상태를 변경하지 못했습니다. 다시 시도해 주세요." }
   }
 
   revalidateOrder(storeSlug, orderId)
@@ -80,7 +80,7 @@ export async function updateInternalNote(
 
   if (error) {
     console.error("[admin] internal note update failed", error)
-    return { error: "Could not save the note. Please try again." }
+    return { error: "메모를 저장하지 못했습니다. 다시 시도해 주세요." }
   }
 
   revalidatePath(`/admin/${storeSlug}/orders/${orderId}`)
@@ -120,7 +120,7 @@ export async function setQuote(
   amountKrwInput: number | string
 ): Promise<ActionResult> {
   const membership = await getStoreMembership(storeSlug)
-  if (!membership) return { error: "Not authorized." }
+  if (!membership) return { error: "권한이 없습니다." }
 
   const amountKrw = parseAmountKrw(amountKrwInput)
   if (amountKrw === null) {
@@ -136,7 +136,7 @@ export async function setQuote(
     .eq("store_id", membership.storeId)
     .maybeSingle<PaymentOrderRow>()
 
-  if (fetchError || !order) return { error: "Order not found." }
+  if (fetchError || !order) return { error: "주문을 찾을 수 없습니다." }
   if (order.status !== "pricing_pending") {
     return { error: `"${order.status}" 상태에서는 견적을 처음 입력할 수 없습니다.` }
   }
@@ -171,7 +171,7 @@ export async function updateQuote(
   amountKrwInput: number | string
 ): Promise<ActionResult> {
   const membership = await getStoreMembership(storeSlug)
-  if (!membership) return { error: "Not authorized." }
+  if (!membership) return { error: "권한이 없습니다." }
 
   const amountKrw = parseAmountKrw(amountKrwInput)
   if (amountKrw === null) {
@@ -187,7 +187,7 @@ export async function updateQuote(
     .eq("store_id", membership.storeId)
     .maybeSingle<{ status: OrderStatus }>()
 
-  if (fetchError || !order) return { error: "Order not found." }
+  if (fetchError || !order) return { error: "주문을 찾을 수 없습니다." }
   if (order.status !== "payment_pending") {
     return { error: `"${order.status}" 상태에서는 견적을 수정할 수 없습니다.` }
   }
@@ -214,7 +214,7 @@ export async function markPaymentRequested(
   orderId: string
 ): Promise<ActionResult> {
   const membership = await getStoreMembership(storeSlug)
-  if (!membership) return { error: "Not authorized." }
+  if (!membership) return { error: "권한이 없습니다." }
 
   const supabase = await createClient()
 
@@ -225,7 +225,7 @@ export async function markPaymentRequested(
     .eq("store_id", membership.storeId)
     .maybeSingle<{ status: OrderStatus; payment_requested_at: string | null }>()
 
-  if (fetchError || !order) return { error: "Order not found." }
+  if (fetchError || !order) return { error: "주문을 찾을 수 없습니다." }
   if (order.status !== "payment_pending") {
     return { error: "입금 대기 상태의 주문만 결제 요청을 기록할 수 있습니다." }
   }
@@ -253,13 +253,13 @@ export async function markAsPaid(
   orderId: string
 ): Promise<ActionResult> {
   const membership = await getStoreMembership(storeSlug)
-  if (!membership) return { error: "Not authorized." }
+  if (!membership) return { error: "권한이 없습니다." }
 
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return { error: "Not authorized." }
+  if (!user) return { error: "권한이 없습니다." }
 
   const { data: order, error: fetchError } = await supabase
     .from("orders")
@@ -268,7 +268,7 @@ export async function markAsPaid(
     .eq("store_id", membership.storeId)
     .maybeSingle<{ status: OrderStatus }>()
 
-  if (fetchError || !order) return { error: "Order not found." }
+  if (fetchError || !order) return { error: "주문을 찾을 수 없습니다." }
   if (order.status !== "payment_pending") {
     return { error: "입금 대기 상태의 주문만 입금 확인할 수 있습니다." }
   }
@@ -299,7 +299,7 @@ export async function undoPayment(
   orderId: string
 ): Promise<ActionResult> {
   const membership = await getStoreMembership(storeSlug)
-  if (!membership) return { error: "Not authorized." }
+  if (!membership) return { error: "권한이 없습니다." }
 
   const supabase = await createClient()
 
@@ -310,7 +310,7 @@ export async function undoPayment(
     .eq("store_id", membership.storeId)
     .maybeSingle<{ status: OrderStatus }>()
 
-  if (fetchError || !order) return { error: "Order not found." }
+  if (fetchError || !order) return { error: "주문을 찾을 수 없습니다." }
   if (order.status !== "paid") {
     return { error: "결제 완료 상태의 주문만 되돌릴 수 있습니다." }
   }
@@ -338,7 +338,7 @@ export async function cancelOrder(
   reason: string
 ): Promise<ActionResult> {
   const membership = await getStoreMembership(storeSlug)
-  if (!membership) return { error: "Not authorized." }
+  if (!membership) return { error: "권한이 없습니다." }
 
   const supabase = await createClient()
 
@@ -349,7 +349,7 @@ export async function cancelOrder(
     .eq("store_id", membership.storeId)
     .maybeSingle<{ status: OrderStatus }>()
 
-  if (fetchError || !order) return { error: "Order not found." }
+  if (fetchError || !order) return { error: "주문을 찾을 수 없습니다." }
   if (!NON_TERMINAL_STATUSES.includes(order.status)) {
     return { error: "이미 종료된 주문입니다." }
   }

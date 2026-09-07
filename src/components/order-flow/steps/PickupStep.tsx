@@ -99,6 +99,12 @@ export function PickupStep({ storeSlug, pickupDate, pickupTime, onChange }: Pick
         <p className="text-sm text-muted-foreground">Loading available times…</p>
       )}
 
+      {days && days.every((d) => !d.isOpen) && (
+        <p className="text-sm text-destructive">
+          현재 픽업 가능한 날짜가 없습니다. 매장에 문의해 주세요.
+        </p>
+      )}
+
       {days && (
         <>
           <div className="flex gap-2 overflow-x-auto pb-1">

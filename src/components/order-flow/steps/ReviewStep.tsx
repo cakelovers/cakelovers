@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { ensureAnonymousSession } from "@/lib/supabase/ensure-session"
+import { clearDraft } from "@/lib/wizard-persistence"
 import type { WizardData } from "../types"
 
 interface ReviewStepProps {
@@ -129,6 +130,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
         return
       }
 
+      clearDraft(storeSlug)
       setSubmittedOrderId(body.orderId)
     } catch (error) {
       // Logged so a client-side init failure (e.g. missing Supabase env

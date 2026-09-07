@@ -120,6 +120,35 @@ export function computeEligibleDays(
   return results
 }
 
+// Wraps computeEligibleDays with an adaptive search window. A fixed
+// 14-day lookahead works for near-default settings but produces a
+// silent dead end for a store with a long lead time relative to that
+// window (e.g. a shop needing a week+ notice for custom cakes) —
+// every visible day comes back closed with no indication why. This
+// keeps extending the window, in 14-day increments, until it finds a
+// reasonable number of open days or hits the cap.
+export function findEligibleDays(
+  settings: PickupSettings,
+  now: StoreNow,
+  options: { minOpenDays?: number; maxDaysAhead?: number } = {}
+): DaySlots[] {
+  const minOpenDays = options.minOpenDays ?? 5
+  const maxDaysAhead = options.maxDaysAhead ?? 60
+
+  let daysAhead = Math.min(14, maxDaysAhead)
+  let result = computeEligibleDays(settings, now, daysAhead)
+
+  while (
+    result.filter((d) => d.isOpen).length < minOpenDays &&
+    daysAhead < maxDaysAhead
+  ) {
+    daysAhead = Math.min(daysAhead + 14, maxDaysAhead)
+    result = computeEligibleDays(settings, now, daysAhead)
+  }
+
+  return result
+}
+
 // Final server-side check for one specific customer-submitted
 // date+time — same rule as computeEligibleDays, evaluated for a
 // single candidate. This is the actual enforcement; the picker only

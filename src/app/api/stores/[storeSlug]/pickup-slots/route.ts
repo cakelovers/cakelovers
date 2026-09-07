@@ -5,13 +5,11 @@ import {
   type PickupSettingsRow,
   type PickupDaySettingsRow,
 } from "@/lib/admin/get-pickup-settings"
-import { computeEligibleDays, nowInTimeZone } from "@/lib/validation/pickup"
+import { findEligibleDays, nowInTimeZone } from "@/lib/validation/pickup"
 
 function errorResponse(status: number, code: string, message: string) {
   return NextResponse.json({ error: { code, message } }, { status })
 }
-
-const DAYS_AHEAD = 14
 
 // Public, read-only — the customer picker's entire data source.
 // Slot eligibility is computed here, server-side, so the client never
@@ -19,6 +17,10 @@ const DAYS_AHEAD = 14
 // ever renders what this returns, and the order API's final
 // validation (orders/route.ts) uses the exact same computeEligibleDays
 // / isPickupSlotValid functions against the same settings.
+//
+// Uses findEligibleDays (not a fixed 14-day window) so a store with a
+// long lead time relative to 14 days doesn't hand the customer a
+// picker with nothing open and no explanation — see pickup.ts.
 //
 // Reads via the service-role client: pickup settings are members-only
 // RLS (0007), and this route has no store-staff session to authorize
@@ -57,7 +59,7 @@ export async function GET(
 
   const settings = resolvePickupSettings(intervalRow, dayRows ?? [])
   const now = nowInTimeZone(store.timezone)
-  const days = computeEligibleDays(settings, now, DAYS_AHEAD)
+  const days = findEligibleDays(settings, now)
 
   return NextResponse.json({ days, intervalMinutes: settings.intervalMinutes })
 }

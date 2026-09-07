@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { ORDER_STATUSES, formatStatusLabel, type OrderStatus } from "@/lib/admin/order-status"
+import { dropdownStatusOptions, formatStatusLabel, type OrderStatus } from "@/lib/admin/order-status"
 import { updateOrderStatus } from "@/app/admin/[storeSlug]/orders/[orderId]/actions"
 
 interface StatusUpdateFormProps {
@@ -45,7 +45,7 @@ export function StatusUpdateForm({ storeSlug, orderId, currentStatus }: StatusUp
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {ORDER_STATUSES.map((value) => (
+          {dropdownStatusOptions(currentStatus).map((value) => (
             <SelectItem key={value} value={value}>
               {formatStatusLabel(value)}
             </SelectItem>

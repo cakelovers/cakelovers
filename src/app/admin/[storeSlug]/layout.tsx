@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getStoreMembership } from "@/lib/admin/get-store-membership"
 import { SignOutButton } from "@/components/admin/SignOutButton"
@@ -25,7 +26,12 @@ export default async function AdminLayout({
     <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
       <header className="flex items-center justify-between border-b px-4 py-3">
         <span className="font-semibold">{membership.storeName}</span>
-        <SignOutButton />
+        <div className="flex items-center gap-3">
+          <Link href={`/admin/${storeSlug}/settings`} className="text-sm underline">
+            Settings
+          </Link>
+          <SignOutButton />
+        </div>
       </header>
       <main className="flex-1">{children}</main>
     </div>

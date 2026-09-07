@@ -5,12 +5,14 @@ import { createClient } from "@/lib/supabase/server"
 import { createServiceRoleClient } from "@/lib/supabase/service-role"
 import { Card, CardContent } from "@/components/ui/card"
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge"
+import { formatKrw } from "@/lib/payments/format"
 
 interface OrderListRow {
   id: string
   status: string
   pickup_date: string
   pickup_time: string
+  quoted_price_krw: number | null
   ai_preview_storage_path: string
   customers: { name: string } | { name: string }[] | null
 }
@@ -32,7 +34,7 @@ export default async function OrdersPage({
   const supabase = await createClient()
   const { data: orders } = await supabase
     .from("orders")
-    .select("id, status, pickup_date, pickup_time, ai_preview_storage_path, customers(name)")
+    .select("id, status, pickup_date, pickup_time, quoted_price_krw, ai_preview_storage_path, customers(name)")
     .eq("store_id", membership.storeId)
     .order("created_at", { ascending: false })
 
@@ -83,6 +85,8 @@ export default async function OrdersPage({
                   <div className="truncate font-medium">{customerName(order)}</div>
                   <div className="text-muted-foreground">
                     {order.pickup_date} {order.pickup_time}
+                    {" · 견적 "}
+                    {order.quoted_price_krw != null ? formatKrw(order.quoted_price_krw) : "—"}
                   </div>
                 </div>
                 <OrderStatusBadge status={order.status} />

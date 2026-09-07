@@ -27,6 +27,10 @@ export interface WizardData {
   // design `description` — e.g. "no candles needed" or "reduce
   // sweetness if possible". Shown to both staff and the customer.
   customerNote: string
+  // Required before submission — see /privacy. The server stamps its
+  // own timestamp on `orders.privacy_consent_given_at`; this flag only
+  // gates the client-side submit button.
+  privacyConsentAccepted: boolean
 }
 
 export const WIZARD_STEPS = [

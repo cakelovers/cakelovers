@@ -72,6 +72,7 @@ export async function POST(
   const phone = readField(formData, "phone")?.trim() ?? ""
   const email = readField(formData, "email")?.trim() ?? ""
   const customerNote = readField(formData, "customerNote")?.trim() ?? ""
+  const privacyConsentAccepted = readField(formData, "privacyConsentAccepted") === "true"
 
   if (!orderId || !UUID_PATTERN.test(orderId)) {
     return errorResponse(400, "invalid_order_id", "Missing or invalid order id.")
@@ -106,6 +107,13 @@ export async function POST(
       400,
       "customer_note_too_long",
       `Please keep additional notes under ${MAX_CUSTOMER_NOTE_LENGTH} characters.`
+    )
+  }
+  if (!privacyConsentAccepted) {
+    return errorResponse(
+      400,
+      "privacy_consent_required",
+      "Please agree to the privacy policy before submitting."
     )
   }
 
@@ -209,6 +217,7 @@ export async function POST(
     ai_preview_storage_path: previewStoragePath,
     ai_preview_prompt: previewPrompt,
     customer_note: customerNote || null,
+    privacy_consent_given_at: new Date().toISOString(),
   })
 
   if (orderInsertError) {

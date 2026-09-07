@@ -112,6 +112,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       formData.set("phone", data.phone)
       formData.set("email", data.email)
       formData.set("customerNote", data.customerNote)
+      formData.set("privacyConsentAccepted", String(data.privacyConsentAccepted))
 
       referenceStoragePaths.forEach(({ position, storagePath }) => {
         formData.set(`reference_${position}_path`, storagePath)
@@ -242,11 +243,32 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
         </p>
       )}
 
+      <label className="flex items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="mt-0.5"
+          checked={data.privacyConsentAccepted}
+          onChange={(e) => onChange({ privacyConsentAccepted: e.target.checked })}
+        />
+        <span>
+          <Link href="/privacy" target="_blank" className="underline">
+            개인정보처리방침
+          </Link>
+          에 동의합니다.
+        </span>
+      </label>
+
       {submitError && <p className="text-sm text-destructive">{submitError}</p>}
 
       <Button
         onClick={handleSubmit}
-        disabled={isSubmitting || !data.selectedPreviewImage || !data.name || (!data.phone && !data.email)}
+        disabled={
+          isSubmitting ||
+          !data.selectedPreviewImage ||
+          !data.name ||
+          (!data.phone && !data.email) ||
+          !data.privacyConsentAccepted
+        }
       >
         {isSubmitting ? "Submitting…" : "Submit Order"}
       </Button>

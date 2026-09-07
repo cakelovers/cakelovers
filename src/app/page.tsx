@@ -201,8 +201,11 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="mx-auto w-full max-w-5xl px-4 py-8 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Cake Lovers
+      <footer className="mx-auto flex w-full max-w-5xl flex-col items-center gap-2 px-4 py-8 text-center text-xs text-muted-foreground">
+        <Link href="/privacy" className="underline">
+          개인정보처리방침
+        </Link>
+        <span>© {new Date().getFullYear()} Cake Lovers</span>
       </footer>
     </div>
   )

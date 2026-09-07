@@ -27,6 +27,7 @@ const INITIAL_DATA: WizardData = {
   phone: "",
   email: "",
   customerNote: "",
+  privacyConsentAccepted: false,
 }
 
 interface OrderWizardProps {

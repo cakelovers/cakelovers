@@ -1,16 +1,30 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { getStoreMembership } from "@/lib/admin/get-store-membership"
+import {
+  getPaymentSettings,
+  isPaymentSettingsComplete,
+  DEFAULT_PAYMENT_DEADLINE_HOURS,
+} from "@/lib/admin/get-payment-settings"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceRoleClient } from "@/lib/supabase/service-role"
 import type { OrderStatus } from "@/lib/admin/order-status"
+import { buildPaymentMessage } from "@/lib/payments/payment-message"
+import { getSiteUrl } from "@/lib/site-url"
 import { StatusUpdateForm } from "@/components/admin/StatusUpdateForm"
 import { InternalNoteForm } from "@/components/admin/InternalNoteForm"
+import { PaymentSection } from "@/components/admin/payment/PaymentSection"
+
+const FALLBACK_TIMEZONE = "Asia/Seoul"
 
 interface CustomerInfo {
   name: string
   phone: string | null
   email: string | null
+}
+
+interface StoreInfo {
+  timezone: string
 }
 
 interface OrderDetailRow {
@@ -22,7 +36,13 @@ interface OrderDetailRow {
   ai_preview_storage_path: string
   internal_note: string | null
   customer_note: string | null
+  quoted_price_krw: number | null
+  payment_requested_at: string | null
+  paid_at: string | null
+  payment_reference: string | null
+  cancellation_reason: string | null
   customers: CustomerInfo | CustomerInfo[] | null
+  stores: StoreInfo | StoreInfo[] | null
 }
 
 interface ReferenceImageRow {
@@ -50,7 +70,7 @@ export default async function OrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, description, status, pickup_date, pickup_time, ai_preview_storage_path, internal_note, customer_note, customers(name, phone, email)"
+      "id, description, status, pickup_date, pickup_time, ai_preview_storage_path, internal_note, customer_note, quoted_price_krw, payment_requested_at, paid_at, payment_reference, cancellation_reason, customers(name, phone, email), stores(timezone)"
     )
     .eq("id", orderId)
     .eq("store_id", membership.storeId)
@@ -66,6 +86,45 @@ export default async function OrderDetailPage({
 
   const refRows = (referenceImages ?? []) as ReferenceImageRow[]
   const customer = firstOrSelf(order.customers)
+  const store = firstOrSelf(order.stores)
+  const storeTimezone = store?.timezone || FALLBACK_TIMEZONE
+
+  // --- Payment message (built server-side, handed to the copy button) ---
+  const paymentSettings = await getPaymentSettings(membership.storeId)
+  const settingsComplete = isPaymentSettingsComplete(paymentSettings)
+  const deadlineHours =
+    paymentSettings?.paymentDeadlineHours ?? DEFAULT_PAYMENT_DEADLINE_HOURS
+
+  let paymentMessage: string | null = null
+  if (
+    order.status === "payment_pending" &&
+    settingsComplete &&
+    order.quoted_price_krw != null &&
+    order.payment_reference
+  ) {
+    const deadlineBase = order.payment_requested_at
+      ? new Date(order.payment_requested_at)
+      : new Date()
+    const deadlineAt = new Date(deadlineBase.getTime() + deadlineHours * 3_600_000)
+
+    paymentMessage = buildPaymentMessage({
+      storeName: membership.storeName,
+      customerName: customer?.name ?? "고객",
+      description: order.description,
+      pickupDate: order.pickup_date,
+      pickupTime: order.pickup_time,
+      amountKrw: order.quoted_price_krw,
+      paymentReference: order.payment_reference,
+      bankName: paymentSettings.bankName ?? "",
+      bankAccountNumber: paymentSettings.bankAccountNumber ?? "",
+      bankAccountHolder: paymentSettings.bankAccountHolder ?? "",
+      paymentInstructions: paymentSettings.paymentInstructions,
+      deadlineHours,
+      deadlineAt,
+      storeTimezone,
+      orderUrl: `${await getSiteUrl()}/orders/${order.id}`,
+    })
+  }
 
   // Service-role client used only for generating signed display URLs —
   // see the same note in orders/page.tsx and docs from Phase 3 on why
@@ -96,6 +155,20 @@ export default async function OrderDetailPage({
       </Link>
 
       <StatusUpdateForm storeSlug={storeSlug} orderId={orderId} currentStatus={order.status} />
+
+      <PaymentSection
+        storeSlug={storeSlug}
+        orderId={orderId}
+        status={order.status}
+        quotedPriceKrw={order.quoted_price_krw}
+        paymentReference={order.payment_reference}
+        paymentRequestedAt={order.payment_requested_at}
+        paidAt={order.paid_at}
+        cancellationReason={order.cancellation_reason}
+        storeTimezone={storeTimezone}
+        settingsComplete={settingsComplete}
+        paymentMessage={paymentMessage}
+      />
 
       <section className="flex flex-col gap-2">
         <h2 className="font-medium">AI-generated design (customer-approved)</h2>

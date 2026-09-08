@@ -6,6 +6,7 @@ import {
   MIN_DESCRIPTION_LENGTH,
   MAX_DESCRIPTION_LENGTH,
   MAX_CUSTOMER_NOTE_LENGTH,
+  MAX_CAKE_MESSAGE_LENGTH,
 } from "@/lib/validation/description"
 import {
   resolvePickupSettings,
@@ -13,11 +14,25 @@ import {
   type PickupDaySettingsRow,
 } from "@/lib/admin/get-pickup-settings"
 import { isPickupSlotValid, nowInTimeZone } from "@/lib/validation/pickup"
+import { mapCakeOptionRow, type CakeOptionRow, type CakeOptionKind } from "@/lib/admin/get-cake-options"
+import { OCCASION_OPTIONS_KO } from "@/lib/copy/occasion"
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const PREVIEW_BUCKET = "ai-previews"
+
+const CAKE_OPTION_REQUIRED_MESSAGE_KO: Record<CakeOptionKind, string> = {
+  flavor: "맛을 선택해 주세요.",
+  size: "사이즈를 선택해 주세요.",
+  shape: "모양을 선택해 주세요.",
+}
+
+const CAKE_OPTION_STALE_MESSAGE_KO: Record<CakeOptionKind, string> = {
+  flavor: "선택하신 맛 옵션을 더 이상 사용할 수 없습니다. 다시 선택해 주세요.",
+  size: "선택하신 사이즈 옵션을 더 이상 사용할 수 없습니다. 다시 선택해 주세요.",
+  shape: "선택하신 모양 옵션을 더 이상 사용할 수 없습니다. 다시 선택해 주세요.",
+}
 
 function errorResponse(status: number, code: string, message: string) {
   return NextResponse.json({ error: { code, message } }, { status })
@@ -79,6 +94,12 @@ export async function POST(
   const email = readField(formData, "email")?.trim() ?? ""
   const customerNote = readField(formData, "customerNote")?.trim() ?? ""
   const privacyConsentAccepted = readField(formData, "privacyConsentAccepted") === "true"
+  const occasion = readField(formData, "occasion")?.trim() ?? ""
+  const flavorOptionId = readField(formData, "flavorOptionId")
+  const sizeOptionId = readField(formData, "sizeOptionId")
+  const shapeOptionId = readField(formData, "shapeOptionId")
+  const cakeMessageChoice = readField(formData, "cakeMessageChoice")
+  const cakeMessageRaw = readField(formData, "cakeMessage") ?? ""
 
   if (!orderId || !UUID_PATTERN.test(orderId)) {
     return errorResponse(400, "invalid_order_id", "주문 번호가 없거나 올바르지 않습니다.")
@@ -121,6 +142,30 @@ export async function POST(
       "privacy_consent_required",
       "제출하기 전에 개인정보처리방침에 동의해 주세요."
     )
+  }
+  if (occasion && !OCCASION_OPTIONS_KO.includes(occasion as (typeof OCCASION_OPTIONS_KO)[number])) {
+    return errorResponse(400, "invalid_occasion", "올바르지 않은 용도입니다.")
+  }
+  if (cakeMessageChoice !== "none" && cakeMessageChoice !== "custom") {
+    return errorResponse(400, "missing_cake_message_choice", "케이크 메시지 여부를 선택해 주세요.")
+  }
+  // "메시지 없음" ignores any accompanying text server-side, regardless
+  // of what the client sent — never trusts the client to have cleared
+  // it after switching away from "메시지 추가" (Sprint 3 spec risk register).
+  let cakeMessage: string | null = null
+  if (cakeMessageChoice === "custom") {
+    const trimmed = cakeMessageRaw.trim()
+    if (!trimmed) {
+      return errorResponse(400, "missing_cake_message", "케이크에 적을 메시지를 입력해 주세요.")
+    }
+    if (trimmed.length > MAX_CAKE_MESSAGE_LENGTH) {
+      return errorResponse(
+        400,
+        "cake_message_too_long",
+        `케이크 메시지는 ${MAX_CAKE_MESSAGE_LENGTH}자 이하로 입력해 주세요.`
+      )
+    }
+    cakeMessage = trimmed
   }
 
   // Reference photos were already uploaded individually via prior calls
@@ -177,6 +222,51 @@ export async function POST(
       "pickup_slot_unavailable",
       "선택하신 픽업 시간은 더 이상 이용할 수 없습니다. 다른 시간을 선택해 주세요."
     )
+  }
+
+  // --- Re-validate flavor/size/shape against the store's live catalog --
+  // The Cake Information step only ever offers what this same query
+  // would also return — this is the actual enforcement, since a stale
+  // page or a direct API call could still submit an option that's since
+  // been disabled or never belonged to this store. Labels are resolved
+  // here, from the database, and never taken from the client — the
+  // resulting *_label columns are an immutable snapshot of this lookup,
+  // not of whatever string the client happened to send.
+  const { data: cakeOptionRows } = await serviceRole
+    .from("store_cake_options")
+    .select("id, kind, label, is_enabled, sort_order")
+    .eq("store_id", store.id)
+    .eq("is_enabled", true)
+    .returns<CakeOptionRow[]>()
+
+  const enabledCakeOptions = (cakeOptionRows ?? []).map(mapCakeOptionRow)
+  const submittedOptionIds: Record<CakeOptionKind, string | null> = {
+    flavor: flavorOptionId,
+    size: sizeOptionId,
+    shape: shapeOptionId,
+  }
+  const resolvedLabels: Record<CakeOptionKind, string | null> = {
+    flavor: null,
+    size: null,
+    shape: null,
+  }
+
+  for (const kind of ["flavor", "size", "shape"] as const) {
+    const optionsForKind = enabledCakeOptions.filter((option) => option.kind === kind)
+    if (optionsForKind.length === 0) {
+      // Nothing enabled for this kind — not required, and nothing the
+      // client sent could validly apply, so it's ignored entirely.
+      continue
+    }
+    const submittedId = submittedOptionIds[kind]
+    if (!submittedId) {
+      return errorResponse(400, `missing_${kind}`, CAKE_OPTION_REQUIRED_MESSAGE_KO[kind])
+    }
+    const match = optionsForKind.find((option) => option.id === submittedId)
+    if (!match) {
+      return errorResponse(400, `invalid_${kind}`, CAKE_OPTION_STALE_MESSAGE_KO[kind])
+    }
+    resolvedLabels[kind] = match.label
   }
 
   // The preview was already uploaded by a prior call to
@@ -254,6 +344,17 @@ export async function POST(
     ai_preview_prompt: previewPrompt,
     customer_note: customerNote || null,
     privacy_consent_given_at: new Date().toISOString(),
+    occasion: occasion || null,
+    // resolvedLabels[kind] is only ever set once the corresponding id
+    // has already passed the store-scoped, enabled-only check above —
+    // a stray id for a kind with nothing enabled is dropped, not stored.
+    flavor_option_id: resolvedLabels.flavor ? flavorOptionId : null,
+    flavor_label: resolvedLabels.flavor,
+    size_option_id: resolvedLabels.size ? sizeOptionId : null,
+    size_label: resolvedLabels.size,
+    shape_option_id: resolvedLabels.shape ? shapeOptionId : null,
+    shape_label: resolvedLabels.shape,
+    cake_message: cakeMessage,
   })
 
   if (orderInsertError) {

@@ -12,6 +12,7 @@ import { GeneratePreviewStep } from "./steps/GeneratePreviewStep"
 import { RegeneratePreviewStep } from "./steps/RegeneratePreviewStep"
 import { SelectPreviewStep } from "./steps/SelectPreviewStep"
 import { ReferenceImagesStep } from "./steps/ReferenceImagesStep"
+import { CakeInformationStep } from "./steps/CakeInformationStep"
 import { PickupStep } from "./steps/PickupStep"
 import { ReviewStep } from "./steps/ReviewStep"
 
@@ -22,6 +23,16 @@ const INITIAL_DATA: WizardData = {
   selectedPreviewImage: null,
   selectedPreviewPrompt: null,
   referenceImages: [null, null, null],
+  occasion: "",
+  cakeOptionAvailability: null,
+  flavorOptionId: null,
+  sizeOptionId: null,
+  shapeOptionId: null,
+  flavorLabel: null,
+  sizeLabel: null,
+  shapeLabel: null,
+  cakeMessageChoice: null,
+  cakeMessage: "",
   pickupDate: "",
   pickupTime: "",
   name: "",
@@ -184,6 +195,15 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
           <ReferenceImagesStep
             images={data.referenceImages}
             onChange={(referenceImages) => updateData({ referenceImages })}
+          />
+        )}
+
+        {currentStep.id === "cakeInfo" && (
+          <CakeInformationStep
+            storeSlug={storeSlug}
+            description={data.description}
+            data={data}
+            onChange={updateData}
           />
         )}
 

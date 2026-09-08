@@ -39,6 +39,11 @@ interface TrackedOrder {
   status: string
   description: string
   customer_note: string | null
+  occasion: string | null
+  flavor_label: string | null
+  size_label: string | null
+  shape_label: string | null
+  cake_message: string | null
   pickup_date: string
   pickup_time: string
   ai_preview_storage_path: string
@@ -89,7 +94,7 @@ export default async function OrderTrackingPage({
   const { data: order, error } = await serviceRole
     .from("orders")
     .select(
-      "id, store_id, status, description, customer_note, pickup_date, pickup_time, ai_preview_storage_path, quoted_price_krw, payment_requested_at, paid_at, payment_reference, cancellation_reason, customers(name, phone, email), stores(name, timezone)"
+      "id, store_id, status, description, customer_note, occasion, flavor_label, size_label, shape_label, cake_message, pickup_date, pickup_time, ai_preview_storage_path, quoted_price_krw, payment_requested_at, paid_at, payment_reference, cancellation_reason, customers(name, phone, email), stores(name, timezone)"
     )
     .eq("id", orderId)
     .maybeSingle<TrackedOrder>()
@@ -167,6 +172,24 @@ export default async function OrderTrackingPage({
             <div>
               <span className="font-medium">고객 메모: </span>
               {order.customer_note}
+            </div>
+          )}
+          {order.occasion && (
+            <div>
+              <span className="font-medium">용도: </span>
+              {order.occasion}
+            </div>
+          )}
+          {(order.flavor_label || order.size_label || order.shape_label) && (
+            <div>
+              <span className="font-medium">케이크: </span>
+              {[order.flavor_label, order.size_label, order.shape_label].filter(Boolean).join(" · ")}
+            </div>
+          )}
+          {order.cake_message && (
+            <div>
+              <span className="font-medium">케이크 메시지: </span>
+              {order.cake_message}
             </div>
           )}
           <div>

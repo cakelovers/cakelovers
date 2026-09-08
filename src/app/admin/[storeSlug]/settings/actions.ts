@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { getStoreMembership } from "@/lib/admin/get-store-membership"
 import { WEEKDAY_LABELS_KO } from "@/lib/copy/weekday"
+import type { CakeOptionKind } from "@/lib/admin/get-cake-options"
+import { CAKE_OPTION_KIND_LABELS_KO, MAX_CAKE_OPTION_LABEL_LENGTH } from "@/lib/copy/cake-options"
 
 interface ActionResult {
   error?: string
@@ -168,6 +170,168 @@ export async function savePickupSettings(
   if (daysError) {
     console.error("[admin] pickup day settings save failed", daysError)
     return { error: "픽업 설정을 저장하지 못했습니다. 다시 시도해 주세요." }
+  }
+
+  revalidatePath(`/admin/${storeSlug}/settings`)
+  return { success: true }
+}
+
+// ---------------------------------------------------------------------------
+// Sprint 3 — store-specific cake catalogs (flavor/size/shape)
+// ---------------------------------------------------------------------------
+// Disabling (is_enabled = false) is the only supported removal path —
+// there is no delete action. Orders snapshot their chosen option's
+// label at submission time (flavor_label/size_label/shape_label), so a
+// later disable or rename never rewrites what a past order displays.
+
+export async function addCakeOption(
+  storeSlug: string,
+  kind: CakeOptionKind,
+  label: string
+): Promise<ActionResult> {
+  const membership = await getStoreMembership(storeSlug)
+  if (!membership) return { error: "권한이 없습니다." }
+
+  const trimmed = label.trim()
+  if (!trimmed) {
+    return { error: `${CAKE_OPTION_KIND_LABELS_KO[kind]} 이름을 입력해 주세요.` }
+  }
+  if (trimmed.length > MAX_CAKE_OPTION_LABEL_LENGTH) {
+    return {
+      error: `${CAKE_OPTION_KIND_LABELS_KO[kind]} 이름은 ${MAX_CAKE_OPTION_LABEL_LENGTH}자 이하로 입력해 주세요.`,
+    }
+  }
+
+  const supabase = await createClient()
+
+  const { data: existing } = await supabase
+    .from("store_cake_options")
+    .select("sort_order")
+    .eq("store_id", membership.storeId)
+    .eq("kind", kind)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle<{ sort_order: number }>()
+
+  const { error } = await supabase.from("store_cake_options").insert({
+    store_id: membership.storeId,
+    kind,
+    label: trimmed,
+    sort_order: (existing?.sort_order ?? -1) + 1,
+  })
+
+  if (error) {
+    console.error("[admin] cake option insert failed", error)
+    return { error: "옵션을 추가하지 못했습니다. 다시 시도해 주세요." }
+  }
+
+  revalidatePath(`/admin/${storeSlug}/settings`)
+  return { success: true }
+}
+
+export async function updateCakeOptionLabel(
+  storeSlug: string,
+  optionId: string,
+  label: string
+): Promise<ActionResult> {
+  const membership = await getStoreMembership(storeSlug)
+  if (!membership) return { error: "권한이 없습니다." }
+
+  const trimmed = label.trim()
+  if (!trimmed) return { error: "이름을 입력해 주세요." }
+  if (trimmed.length > MAX_CAKE_OPTION_LABEL_LENGTH) {
+    return { error: `이름은 ${MAX_CAKE_OPTION_LABEL_LENGTH}자 이하로 입력해 주세요.` }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("store_cake_options")
+    .update({ label: trimmed })
+    .eq("id", optionId)
+    .eq("store_id", membership.storeId)
+
+  if (error) {
+    console.error("[admin] cake option label update failed", error)
+    return { error: "이름을 수정하지 못했습니다. 다시 시도해 주세요." }
+  }
+
+  revalidatePath(`/admin/${storeSlug}/settings`)
+  return { success: true }
+}
+
+export async function setCakeOptionEnabled(
+  storeSlug: string,
+  optionId: string,
+  isEnabled: boolean
+): Promise<ActionResult> {
+  const membership = await getStoreMembership(storeSlug)
+  if (!membership) return { error: "권한이 없습니다." }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("store_cake_options")
+    .update({ is_enabled: isEnabled })
+    .eq("id", optionId)
+    .eq("store_id", membership.storeId)
+
+  if (error) {
+    console.error("[admin] cake option enable toggle failed", error)
+    return { error: "옵션 상태를 변경하지 못했습니다. 다시 시도해 주세요." }
+  }
+
+  revalidatePath(`/admin/${storeSlug}/settings`)
+  return { success: true }
+}
+
+// Swaps sort_order with the immediate neighbor in the same kind's list.
+// A no-op (not an error) when already at that end of the list.
+export async function moveCakeOption(
+  storeSlug: string,
+  kind: CakeOptionKind,
+  optionId: string,
+  direction: "up" | "down"
+): Promise<ActionResult> {
+  const membership = await getStoreMembership(storeSlug)
+  if (!membership) return { error: "권한이 없습니다." }
+
+  const supabase = await createClient()
+  const { data: rows, error: fetchError } = await supabase
+    .from("store_cake_options")
+    .select("id, sort_order")
+    .eq("store_id", membership.storeId)
+    .eq("kind", kind)
+    .order("sort_order")
+    .returns<{ id: string; sort_order: number }[]>()
+
+  if (fetchError || !rows) {
+    return { error: "옵션 목록을 불러오지 못했습니다. 다시 시도해 주세요." }
+  }
+
+  const index = rows.findIndex((row) => row.id === optionId)
+  const swapIndex = direction === "up" ? index - 1 : index + 1
+  if (index === -1 || swapIndex < 0 || swapIndex >= rows.length) {
+    return { success: true }
+  }
+
+  const current = rows[index]
+  const swapWith = rows[swapIndex]
+
+  const [{ error: errorA }, { error: errorB }] = await Promise.all([
+    supabase
+      .from("store_cake_options")
+      .update({ sort_order: swapWith.sort_order })
+      .eq("id", current.id)
+      .eq("store_id", membership.storeId),
+    supabase
+      .from("store_cake_options")
+      .update({ sort_order: current.sort_order })
+      .eq("id", swapWith.id)
+      .eq("store_id", membership.storeId),
+  ])
+
+  if (errorA || errorB) {
+    console.error("[admin] cake option reorder failed", errorA || errorB)
+    return { error: "순서를 변경하지 못했습니다. 다시 시도해 주세요." }
   }
 
   revalidatePath(`/admin/${storeSlug}/settings`)

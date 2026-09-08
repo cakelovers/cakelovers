@@ -36,6 +36,11 @@ interface OrderDetailRow {
   ai_preview_storage_path: string
   internal_note: string | null
   customer_note: string | null
+  occasion: string | null
+  flavor_label: string | null
+  size_label: string | null
+  shape_label: string | null
+  cake_message: string | null
   quoted_price_krw: number | null
   payment_requested_at: string | null
   paid_at: string | null
@@ -70,7 +75,7 @@ export default async function OrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, description, status, pickup_date, pickup_time, ai_preview_storage_path, internal_note, customer_note, quoted_price_krw, payment_requested_at, paid_at, payment_reference, cancellation_reason, customers(name, phone, email), stores(timezone)"
+      "id, description, status, pickup_date, pickup_time, ai_preview_storage_path, internal_note, customer_note, occasion, flavor_label, size_label, shape_label, cake_message, quoted_price_krw, payment_requested_at, paid_at, payment_reference, cancellation_reason, customers(name, phone, email), stores(timezone)"
     )
     .eq("id", orderId)
     .eq("store_id", membership.storeId)
@@ -218,6 +223,25 @@ export default async function OrderDetailPage({
         <section className="flex flex-col gap-1">
           <h2 className="font-medium">고객 메모</h2>
           <p className="text-sm">{order.customer_note}</p>
+        </section>
+      )}
+
+      {(order.occasion || order.flavor_label || order.size_label || order.shape_label) && (
+        <section className="flex flex-col gap-1">
+          <h2 className="font-medium">케이크 정보</h2>
+          {order.occasion && <p className="text-sm">용도: {order.occasion}</p>}
+          {(order.flavor_label || order.size_label || order.shape_label) && (
+            <p className="text-sm">
+              {[order.flavor_label, order.size_label, order.shape_label].filter(Boolean).join(" · ")}
+            </p>
+          )}
+        </section>
+      )}
+
+      {order.cake_message && (
+        <section className="flex flex-col gap-1">
+          <h2 className="font-medium">케이크 메시지</h2>
+          <p className="text-sm">{order.cake_message}</p>
         </section>
       )}
 

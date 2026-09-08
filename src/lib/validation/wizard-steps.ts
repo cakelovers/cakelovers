@@ -16,6 +16,20 @@ export function canLeaveStep(stepId: WizardStepId, data: WizardData): boolean {
       return Boolean(data.currentPreviewImage && data.currentPreviewPrompt)
     case "select":
       return Boolean(data.selectedPreviewImage && data.selectedPreviewPrompt)
+    case "cakeInfo": {
+      const availability = data.cakeOptionAvailability
+      // Blocked until the catalog fetch resolves (success or failure) —
+      // otherwise a customer who picks "메시지 없음" fast enough could
+      // advance before the fetch tells us whether flavor/size/shape are
+      // actually required for this store.
+      if (!availability) return false
+      if (availability.flavor && !data.flavorOptionId) return false
+      if (availability.size && !data.sizeOptionId) return false
+      if (availability.shape && !data.shapeOptionId) return false
+      if (!data.cakeMessageChoice) return false
+      if (data.cakeMessageChoice === "custom" && !data.cakeMessage.trim()) return false
+      return true
+    }
     case "pickup":
       return Boolean(data.pickupDate && data.pickupTime)
     default:
@@ -33,6 +47,18 @@ export function stepBlockedReason(stepId: WizardStepId, data: WizardData): strin
       return "계속하려면 먼저 미리보기를 생성해 주세요."
     case "select":
       return "계속하려면 디자인을 선택해 주세요."
+    case "cakeInfo": {
+      const availability = data.cakeOptionAvailability
+      if (!availability) return "케이크 옵션을 불러오는 중입니다."
+      if (availability.flavor && !data.flavorOptionId) return "맛을 선택해 주세요."
+      if (availability.size && !data.sizeOptionId) return "사이즈를 선택해 주세요."
+      if (availability.shape && !data.shapeOptionId) return "모양을 선택해 주세요."
+      if (!data.cakeMessageChoice) return "케이크 메시지 여부를 선택해 주세요."
+      if (data.cakeMessageChoice === "custom" && !data.cakeMessage.trim()) {
+        return "케이크에 적을 메시지를 입력해 주세요."
+      }
+      return null
+    }
     case "pickup":
       return "계속하려면 픽업 날짜와 시간을 선택해 주세요."
     default:

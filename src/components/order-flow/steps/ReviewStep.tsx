@@ -105,6 +105,12 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       formData.set("description", data.description)
       formData.set("previewStoragePath", previewBody.storagePath)
       formData.set("previewPrompt", data.selectedPreviewPrompt ?? "")
+      formData.set("occasion", data.occasion)
+      if (data.flavorOptionId) formData.set("flavorOptionId", data.flavorOptionId)
+      if (data.sizeOptionId) formData.set("sizeOptionId", data.sizeOptionId)
+      if (data.shapeOptionId) formData.set("shapeOptionId", data.shapeOptionId)
+      formData.set("cakeMessageChoice", data.cakeMessageChoice ?? "")
+      formData.set("cakeMessage", data.cakeMessage)
       formData.set("pickupDate", data.pickupDate)
       formData.set("pickupTime", data.pickupTime)
       formData.set("name", data.name)
@@ -187,6 +193,22 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           <div>
             <span className="font-medium">참고 사진: </span>
             {referenceCount} / 3
+          </div>
+          {data.occasion && (
+            <div>
+              <span className="font-medium">용도: </span>
+              {data.occasion}
+            </div>
+          )}
+          {(data.flavorLabel || data.sizeLabel || data.shapeLabel) && (
+            <div>
+              <span className="font-medium">케이크: </span>
+              {[data.flavorLabel, data.sizeLabel, data.shapeLabel].filter(Boolean).join(" · ")}
+            </div>
+          )}
+          <div>
+            <span className="font-medium">케이크 메시지: </span>
+            {data.cakeMessageChoice === "custom" ? data.cakeMessage : "없음"}
           </div>
           <div>
             <span className="font-medium">픽업: </span>

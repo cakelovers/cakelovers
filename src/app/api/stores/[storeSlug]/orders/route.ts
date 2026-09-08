@@ -369,7 +369,17 @@ export async function POST(
     // Genuine failure, not a race — nothing will ever reference this
     // upload, so roll it back.
     await serviceRole.storage.from(PREVIEW_BUCKET).remove([previewStoragePath])
-    console.error("[orders] order insert failed", orderInsertError)
+    // TEMPORARY — Sprint 3 regression diagnosis. The generic
+    // console.error(orderInsertError) logged an object reference that
+    // didn't reliably serialize in the deployment's log viewer, hiding
+    // exactly which column/constraint Postgres/PostgREST rejected.
+    // Remove once the failing column is confirmed and fixed.
+    console.error("[orders] order insert failed", {
+      message: orderInsertError.message,
+      details: orderInsertError.details,
+      hint: orderInsertError.hint,
+      code: orderInsertError.code,
+    })
     return errorResponse(500, "order_create_failed", "주문을 제출하지 못했습니다. 다시 시도해 주세요.")
   }
 

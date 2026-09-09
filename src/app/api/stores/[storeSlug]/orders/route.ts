@@ -268,7 +268,16 @@ export async function POST(
     // Genuine failure, not a race — nothing will ever reference this
     // upload, so roll it back.
     await serviceRole.storage.from(PREVIEW_BUCKET).remove([previewStoragePath])
-    console.error("[orders] order insert failed", orderInsertError)
+    // TEMPORARY — diagnosing the production order_create_failed
+    // incident. The generic console.error(orderInsertError) wasn't
+    // reliably surfacing which column/constraint Postgres/PostgREST
+    // rejected. Remove once the failing cause is confirmed and fixed.
+    console.error("[orders] order insert failed", {
+      message: orderInsertError.message,
+      details: orderInsertError.details,
+      hint: orderInsertError.hint,
+      code: orderInsertError.code,
+    })
     return errorResponse(500, "order_create_failed", "주문을 제출하지 못했습니다. 다시 시도해 주세요.")
   }
 

@@ -22,7 +22,6 @@ export interface WizardData {
   pickupTime: string
   name: string
   phone: string
-  email: string
   // Optional production instructions for the shop, distinct from the
   // design `description` — e.g. "no candles needed" or "reduce
   // sweetness if possible". Shown to both staff and the customer.

@@ -26,7 +26,6 @@ const INITIAL_DATA: WizardData = {
   pickupTime: "",
   name: "",
   phone: "",
-  email: "",
   customerNote: "",
   privacyConsentAccepted: false,
 }
@@ -82,7 +81,6 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
       pickupTime: data.pickupTime,
       name: data.name,
       phone: data.phone,
-      email: data.email,
       customerNote: data.customerNote,
     })
   }, [
@@ -92,7 +90,6 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
     data.pickupTime,
     data.name,
     data.phone,
-    data.email,
     data.customerNote,
   ])
 

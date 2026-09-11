@@ -109,7 +109,6 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       formData.set("pickupTime", data.pickupTime)
       formData.set("name", data.name)
       formData.set("phone", data.phone)
-      formData.set("email", data.email)
       formData.set("customerNote", data.customerNote)
       formData.set("privacyConsentAccepted", String(data.privacyConsentAccepted))
 
@@ -200,6 +199,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           <Label htmlFor="name">이름</Label>
           <Input
             id="name"
+            placeholder="홍길동"
             value={data.name}
             onChange={(e) => onChange({ name: e.target.value })}
           />
@@ -209,17 +209,9 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           <Input
             id="phone"
             type="tel"
+            placeholder="01012345678"
             value={data.phone}
             onChange={(e) => onChange({ phone: e.target.value })}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email">이메일</Label>
-          <Input
-            id="email"
-            type="email"
-            value={data.email}
-            onChange={(e) => onChange({ email: e.target.value })}
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -266,7 +258,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           isSubmitting ||
           !data.selectedPreviewImage ||
           !data.name ||
-          (!data.phone && !data.email) ||
+          !data.phone ||
           !data.privacyConsentAccepted
         }
       >

@@ -1,28 +1,14 @@
-import OpenAI from "openai"
+import { getOpenAIClient, MissingApiKeyError } from "./client"
+import { genericizeCharacterNames } from "./character-genericizer"
 
 // Server-only. Text-to-image only — reference images are never an input
 // here (see docs/03_Architecture.md §4 and docs/11_Customer_Order_Wizard.md).
 const MODEL = "gpt-image-1"
 
-let cachedClient: OpenAI | null = null
-
-export class MissingApiKeyError extends Error {
-  constructor() {
-    super("OPENAI_API_KEY is not configured")
-    this.name = "MissingApiKeyError"
-  }
-}
-
-function getClient(): OpenAI {
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) {
-    throw new MissingApiKeyError()
-  }
-  if (!cachedClient) {
-    cachedClient = new OpenAI({ apiKey })
-  }
-  return cachedClient
-}
+// Re-exported so existing callers (ai-preview/route.ts) don't need to
+// change their import path — the client/error now live in ./client,
+// shared with character-genericizer.ts.
+export { MissingApiKeyError }
 
 export function buildCakePreviewPrompt(description: string): string {
   return (
@@ -38,8 +24,14 @@ export interface GeneratedPreview {
 }
 
 export async function generateCakePreview(description: string): Promise<GeneratedPreview> {
-  const prompt = buildCakePreviewPrompt(description)
-  const client = getClient()
+  // Only the AI-facing prompt is genericized — the caller's original
+  // description (persisted as orders.description) is never touched;
+  // this function receives a copy, not a reference it could mutate.
+  // genericizeCharacterNames fails open on any error, so this call
+  // itself never becomes a new reason generation fails.
+  const genericized = await genericizeCharacterNames(description)
+  const prompt = buildCakePreviewPrompt(genericized)
+  const client = getOpenAIClient()
 
   const response = await client.images.generate(
     {

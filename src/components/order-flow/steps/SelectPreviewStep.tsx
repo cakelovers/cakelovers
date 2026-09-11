@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { AiPreviewDisclaimer } from "@/components/AiPreviewDisclaimer"
+import { PreviewReassuranceNote } from "@/components/PreviewReassuranceNote"
 import { cn } from "@/lib/utils"
 
 interface SelectPreviewStepProps {
@@ -54,6 +55,7 @@ export function SelectPreviewStep({
       </div>
 
       <AiPreviewDisclaimer />
+      <PreviewReassuranceNote />
 
       <Button
         onClick={() =>

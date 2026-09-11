@@ -11,7 +11,6 @@ export interface WizardDraft {
   pickupTime: string
   name: string
   phone: string
-  email: string
   customerNote: string
 }
 

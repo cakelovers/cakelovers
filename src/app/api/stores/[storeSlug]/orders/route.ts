@@ -91,7 +91,6 @@ export async function POST(
   const pickupTime = readField(formData, "pickupTime")
   const name = readField(formData, "name")?.trim() ?? ""
   const phone = readField(formData, "phone")?.trim() ?? ""
-  const email = readField(formData, "email")?.trim() ?? ""
   const customerNote = readField(formData, "customerNote")?.trim() ?? ""
   const privacyConsentAccepted = readField(formData, "privacyConsentAccepted") === "true"
   const occasion = readField(formData, "occasion")?.trim() ?? ""
@@ -126,8 +125,8 @@ export async function POST(
   if (!name) {
     return errorResponse(400, "missing_name", "이름을 입력해 주세요.")
   }
-  if (!phone && !email) {
-    return errorResponse(400, "missing_contact", "전화번호 또는 이메일을 입력해 주세요.")
+  if (!phone) {
+    return errorResponse(400, "missing_phone", "전화번호를 입력해 주세요.")
   }
   if (customerNote.length > MAX_CUSTOMER_NOTE_LENGTH) {
     return errorResponse(
@@ -322,7 +321,7 @@ export async function POST(
   } else {
     const { data: newCustomer, error: customerInsertError } = await supabase
       .from("customers")
-      .insert({ store_id: store.id, auth_user_id: user.id, name, phone: phone || null, email: email || null })
+      .insert({ store_id: store.id, auth_user_id: user.id, name, phone: phone || null, email: null })
       .select("id")
       .single()
 

@@ -115,7 +115,6 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       formData.set("pickupTime", data.pickupTime)
       formData.set("name", data.name)
       formData.set("phone", data.phone)
-      formData.set("email", data.email)
       formData.set("customerNote", data.customerNote)
       formData.set("privacyConsentAccepted", String(data.privacyConsentAccepted))
 
@@ -236,15 +235,6 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email">이메일</Label>
-          <Input
-            id="email"
-            type="email"
-            value={data.email}
-            onChange={(e) => onChange({ email: e.target.value })}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
           <Label htmlFor="customer-note">추가 메모 (선택)</Label>
           <Textarea
             id="customer-note"
@@ -288,7 +278,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           isSubmitting ||
           !data.selectedPreviewImage ||
           !data.name ||
-          (!data.phone && !data.email) ||
+          !data.phone ||
           !data.privacyConsentAccepted
         }
       >

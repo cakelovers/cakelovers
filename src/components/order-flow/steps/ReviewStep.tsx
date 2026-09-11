@@ -221,6 +221,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           <Label htmlFor="name">이름</Label>
           <Input
             id="name"
+            placeholder="홍길동"
             value={data.name}
             onChange={(e) => onChange({ name: e.target.value })}
           />
@@ -230,6 +231,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           <Input
             id="phone"
             type="tel"
+            placeholder="01012345678"
             value={data.phone}
             onChange={(e) => onChange({ phone: e.target.value })}
           />

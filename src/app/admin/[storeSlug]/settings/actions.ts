@@ -12,6 +12,10 @@ interface ActionResult {
   success?: true
 }
 
+interface AddCakeOptionResult extends ActionResult {
+  id?: string
+}
+
 export interface PaymentSettingsInput {
   bankName: string
   bankAccountNumber: string
@@ -200,7 +204,7 @@ export async function addCakeOption(
   kind: CakeOptionKind,
   label: string,
   priceAdjustmentKrw: number | string | null
-): Promise<ActionResult> {
+): Promise<AddCakeOptionResult> {
   const membership = await getStoreMembership(storeSlug)
   if (!membership) return { error: "권한이 없습니다." }
 
@@ -228,21 +232,25 @@ export async function addCakeOption(
     .limit(1)
     .maybeSingle<{ sort_order: number }>()
 
-  const { error } = await supabase.from("store_cake_options").insert({
-    store_id: membership.storeId,
-    kind,
-    label: trimmed,
-    price_adjustment_krw: price,
-    sort_order: (existing?.sort_order ?? -1) + 1,
-  })
+  const { data: inserted, error } = await supabase
+    .from("store_cake_options")
+    .insert({
+      store_id: membership.storeId,
+      kind,
+      label: trimmed,
+      price_adjustment_krw: price,
+      sort_order: (existing?.sort_order ?? -1) + 1,
+    })
+    .select("id")
+    .single<{ id: string }>()
 
-  if (error) {
+  if (error || !inserted) {
     console.error("[admin] cake option insert failed", error)
     return { error: "옵션을 추가하지 못했습니다. 다시 시도해 주세요." }
   }
 
   revalidatePath(`/admin/${storeSlug}/settings`)
-  return { success: true }
+  return { success: true, id: inserted.id }
 }
 
 export async function updateCakeOption(

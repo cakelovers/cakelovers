@@ -223,12 +223,20 @@ export async function POST(
   // here, from the database, and never taken from the client — the
   // resulting *_label columns are an immutable snapshot of this lookup,
   // not of whatever string the client happened to send.
-  const { data: cakeOptionRows } = await serviceRole
+  const { data: cakeOptionRows, error: cakeOptionsError } = await serviceRole
     .from("store_cake_options")
     .select("id, kind, label, is_enabled, sort_order, price_adjustment_krw")
     .eq("store_id", store.id)
     .eq("is_enabled", true)
     .returns<CakeOptionRow[]>()
+
+  // A failed lookup here must never be read as "this store has nothing
+  // configured" — that would silently drop a customer's real selection
+  // from the order. Fail the request instead of guessing.
+  if (cakeOptionsError) {
+    console.error("[orders] cake options lookup failed", cakeOptionsError)
+    return errorResponse(500, "order_create_failed", "주문을 제출하지 못했습니다. 다시 시도해 주세요.")
+  }
 
   const enabledCakeOptions = (cakeOptionRows ?? []).map(mapCakeOptionRow)
   const submittedOptionIds: Record<CakeOptionKind, string | null> = {

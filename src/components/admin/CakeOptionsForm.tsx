@@ -59,14 +59,18 @@ function CakeOptionKindList({
     const price = newPrice
     startTransition(async () => {
       const result = await addCakeOption(storeSlug, kind, label, price || null)
-      if (result?.error) {
-        setError(result.error)
+      if (result?.error || !result?.id) {
+        // No usable id means later edits on this row (label/price blur,
+        // enable toggle, reorder) would target an id that doesn't exist
+        // in the database and silently no-op — never optimistically add
+        // a row without the real, server-generated id.
+        setError(result?.error ?? "옵션을 추가하지 못했습니다. 다시 시도해 주세요.")
         return
       }
       setOptions((prev) => [
         ...prev,
         {
-          id: crypto.randomUUID(),
+          id: result.id!,
           kind,
           label: label.trim(),
           isEnabled: true,

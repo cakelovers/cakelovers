@@ -6,6 +6,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+// Fixed, not derived from window.location.origin: this app can be
+// reached through more than one Vercel host (production, and any
+// preview deployment), and window.location.origin resolves to
+// whichever one the browser happens to be on. Since that value gets
+// baked into the magic link Supabase emails, a login started from a
+// preview host would set the resulting session cookie on that preview
+// host — invisible to the production admin panel, and vice versa.
+// Pinning this to the one canonical production host means every
+// magic link, regardless of where it was requested from, always signs
+// the store owner in on production.
+const CANONICAL_SITE_URL = "https://cakelovers-ashen.vercel.app"
+
 // Supabase's own SDK error messages arrive in English — this is the one
 // string in the app that can't be fixed with a direct literal edit.
 // Known cases get a Korean equivalent; anything unrecognized (a future
@@ -38,7 +50,7 @@ export default function LoginPage() {
     const supabase = createClient()
     const { error: signInError } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: `${CANONICAL_SITE_URL}/auth/callback` },
     })
 
     setIsSubmitting(false)

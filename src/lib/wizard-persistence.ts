@@ -1,11 +1,18 @@
 // Lightweight resume-after-refresh support for the customer order
-// wizard. Deliberately persists only small, plain-text fields —
-// description, pickup selection, and contact info. The AI preview
-// image, reference photos, and consent are never written here: images
-// are too large (and, for reference photos, unserializable File
-// objects) for sessionStorage, and consent must always be freshly
-// re-affirmed, never silently restored from a prior session.
+// wizard. Deliberately persists only small, plain-text fields — cake
+// configuration selections, description, pickup selection, and contact
+// info. The AI preview image, reference photos, and consent are never
+// written here: images are too large (and, for reference photos,
+// unserializable File objects) for sessionStorage, and consent must
+// always be freshly re-affirmed, never silently restored from a prior
+// session.
 export interface WizardDraft {
+  specificationOptionId: string | null
+  specificationLabel: string | null
+  flavorPackageOptionId: string | null
+  flavorPackageLabel: string | null
+  cakeMessageChoice: "none" | "custom" | null
+  cakeMessage: string
   description: string
   pickupDate: string
   pickupTime: string

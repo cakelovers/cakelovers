@@ -6,3 +6,7 @@ export const MAX_DESCRIPTION_LENGTH = 500
 
 // customer_note is optional — no minimum, same cap as description.
 export const MAX_CUSTOMER_NOTE_LENGTH = 500
+
+// Only enforced when the customer has chosen "메시지 추가" — "메시지 없음"
+// is an equally valid, unconstrained choice.
+export const MAX_CAKE_MESSAGE_LENGTH = 100

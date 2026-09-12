@@ -3,7 +3,7 @@ import { formatKrw, formatInTimeZone } from "@/lib/payments/format"
 import { DEFAULT_PAYMENT_DEADLINE_HOURS } from "@/lib/admin/get-payment-settings"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { AiPreviewDisclaimer } from "@/components/AiPreviewDisclaimer"
+import { AiPreviewGuidance } from "@/components/AiPreviewGuidance"
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -39,6 +39,9 @@ interface TrackedOrder {
   status: string
   description: string
   customer_note: string | null
+  specification_label: string | null
+  flavor_package_label: string | null
+  cake_message: string | null
   pickup_date: string
   pickup_time: string
   ai_preview_storage_path: string
@@ -89,7 +92,7 @@ export default async function OrderTrackingPage({
   const { data: order, error } = await serviceRole
     .from("orders")
     .select(
-      "id, store_id, status, description, customer_note, pickup_date, pickup_time, ai_preview_storage_path, quoted_price_krw, payment_requested_at, paid_at, payment_reference, cancellation_reason, customers(name, phone, email), stores(name, timezone)"
+      "id, store_id, status, description, customer_note, specification_label, flavor_package_label, cake_message, pickup_date, pickup_time, ai_preview_storage_path, quoted_price_krw, payment_requested_at, paid_at, payment_reference, cancellation_reason, customers(name, phone, email), stores(name, timezone)"
     )
     .eq("id", orderId)
     .maybeSingle<TrackedOrder>()
@@ -154,7 +157,7 @@ export default async function OrderTrackingPage({
         ) : (
           <p className="text-sm text-muted-foreground">미리보기 이미지를 불러올 수 없습니다.</p>
         )}
-        <AiPreviewDisclaimer />
+        <AiPreviewGuidance />
       </section>
 
       <Card>
@@ -167,6 +170,18 @@ export default async function OrderTrackingPage({
             <div>
               <span className="font-medium">고객 메모: </span>
               {order.customer_note}
+            </div>
+          )}
+          {(order.specification_label || order.flavor_package_label) && (
+            <div>
+              <span className="font-medium">케이크 구성: </span>
+              {[order.specification_label, order.flavor_package_label].filter(Boolean).join(" · ")}
+            </div>
+          )}
+          {order.cake_message && (
+            <div>
+              <span className="font-medium">케이크 메시지: </span>
+              {order.cake_message}
             </div>
           )}
           <div>

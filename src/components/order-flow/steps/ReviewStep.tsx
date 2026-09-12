@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
+import { PriceAdjustmentDisclaimer } from "@/components/PriceAdjustmentDisclaimer"
 import { ensureAnonymousSession } from "@/lib/supabase/ensure-session"
 import { clearDraft } from "@/lib/wizard-persistence"
 import type { WizardData } from "../types"
@@ -263,6 +264,8 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           에 동의합니다.
         </span>
       </label>
+
+      <PriceAdjustmentDisclaimer />
 
       {submitError && <p className="text-sm text-destructive">{submitError}</p>}
 

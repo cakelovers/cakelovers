@@ -121,8 +121,9 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
       <div>
         <h2 className="text-lg font-semibold">참고사진 (선택)</h2>
         <p className="text-sm text-muted-foreground">
-          실제 케이크 제작에 반영할 캐릭터 또는 디자인 참고 사진을 첨부해 주세요.
-          (최대 3장)
+          방금 선택한 AI 시안은 분위기 참고용입니다. 캐릭터 그림체, 레터링
+          스타일, 세부 디자인을 정확히 반영하려면 참고 사진을 함께 등록해
+          주세요. (최대 3장)
         </p>
       </div>
 

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { MAX_CAKE_MESSAGE_LENGTH, MAX_DESCRIPTION_LENGTH } from "@/lib/validation/description"
+import { PriceAdjustmentDisclaimer } from "@/components/PriceAdjustmentDisclaimer"
 import type { CakeMessageChoice, WizardData } from "../types"
 
 interface CakeOption {
@@ -157,6 +158,7 @@ export function CakeConfigurationStep({ storeSlug, data, onChange }: CakeConfigu
               </button>
             ))}
           </div>
+          <PriceAdjustmentDisclaimer />
         </div>
       )}
 
@@ -181,6 +183,7 @@ export function CakeConfigurationStep({ storeSlug, data, onChange }: CakeConfigu
               </button>
             ))}
           </div>
+          <PriceAdjustmentDisclaimer />
         </div>
       )}
 
@@ -228,6 +231,11 @@ export function CakeConfigurationStep({ storeSlug, data, onChange }: CakeConfigu
         <p className="text-sm text-muted-foreground">
           배경 색상, 테마, 모양 등 원하시는 내용을 자유롭게 적어주세요.
         </p>
+        {catalog && catalog.specification.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            원하시는 케이크 크기나 사이즈가 있다면 설명에 함께 적어주세요.
+          </p>
+        )}
         <Textarea
           id="description"
           placeholder="예: 핑크색 버터크림 꽃 장식, 하트 모양 토퍼"

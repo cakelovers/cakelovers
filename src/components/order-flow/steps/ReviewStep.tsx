@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
+import { PriceAdjustmentDisclaimer } from "@/components/PriceAdjustmentDisclaimer"
 import { ensureAnonymousSession } from "@/lib/supabase/ensure-session"
 import { clearDraft } from "@/lib/wizard-persistence"
 import type { WizardData } from "../types"
@@ -105,6 +106,10 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       formData.set("description", data.description)
       formData.set("previewStoragePath", previewBody.storagePath)
       formData.set("previewPrompt", data.selectedPreviewPrompt ?? "")
+      if (data.specificationOptionId) formData.set("specificationOptionId", data.specificationOptionId)
+      if (data.flavorPackageOptionId) formData.set("flavorPackageOptionId", data.flavorPackageOptionId)
+      formData.set("cakeMessageChoice", data.cakeMessageChoice ?? "")
+      formData.set("cakeMessage", data.cakeMessage)
       formData.set("pickupDate", data.pickupDate)
       formData.set("pickupTime", data.pickupTime)
       formData.set("name", data.name)
@@ -187,6 +192,16 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
             <span className="font-medium">참고 사진: </span>
             {referenceCount} / 3
           </div>
+          {(data.specificationLabel || data.flavorPackageLabel) && (
+            <div>
+              <span className="font-medium">케이크 구성: </span>
+              {[data.specificationLabel, data.flavorPackageLabel].filter(Boolean).join(" · ")}
+            </div>
+          )}
+          <div>
+            <span className="font-medium">케이크 메시지: </span>
+            {data.cakeMessageChoice === "custom" ? data.cakeMessage : "없음"}
+          </div>
           <div>
             <span className="font-medium">픽업: </span>
             {data.pickupDate || "—"} {data.pickupTime}
@@ -249,6 +264,8 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
           에 동의합니다.
         </span>
       </label>
+
+      <PriceAdjustmentDisclaimer />
 
       {submitError && <p className="text-sm text-destructive">{submitError}</p>}
 

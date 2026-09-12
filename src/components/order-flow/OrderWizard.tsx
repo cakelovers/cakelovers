@@ -7,15 +7,20 @@ import { canLeaveStep, stepBlockedReason } from "@/lib/validation/wizard-steps"
 import { loadDraft, saveDraft } from "@/lib/wizard-persistence"
 import { WizardProgress } from "./WizardProgress"
 import { WIZARD_STEPS, type WizardData } from "./types"
-import { DescriptionStep } from "./steps/DescriptionStep"
-import { GeneratePreviewStep } from "./steps/GeneratePreviewStep"
-import { RegeneratePreviewStep } from "./steps/RegeneratePreviewStep"
-import { SelectPreviewStep } from "./steps/SelectPreviewStep"
+import { CakeConfigurationStep } from "./steps/CakeConfigurationStep"
+import { AiPreviewStep } from "./steps/AiPreviewStep"
 import { ReferenceImagesStep } from "./steps/ReferenceImagesStep"
 import { PickupStep } from "./steps/PickupStep"
 import { ReviewStep } from "./steps/ReviewStep"
 
 const INITIAL_DATA: WizardData = {
+  cakeOptionAvailability: null,
+  specificationOptionId: null,
+  flavorPackageOptionId: null,
+  specificationLabel: null,
+  flavorPackageLabel: null,
+  cakeMessageChoice: null,
+  cakeMessage: "",
   description: "",
   currentPreviewImage: null,
   currentPreviewPrompt: null,
@@ -34,10 +39,10 @@ interface OrderWizardProps {
   storeSlug: string
 }
 
-// AI preview generation (Steps 2-4) and order submission (Step 7) are
-// both real now — see src/app/api/stores/[storeSlug]/ai-preview/route.ts
-// and src/app/api/stores/[storeSlug]/orders/route.ts. See
-// docs/11_Customer_Order_Wizard.md for the full design.
+// Five-step flow: 케이크 구성 -> AI 시안 -> 참고사진 -> 픽업정보 -> 검토 및 제출.
+// See src/app/api/stores/[storeSlug]/ai-preview/route.ts,
+// .../cake-options/route.ts, and .../orders/route.ts for the
+// corresponding server-side pieces.
 export function OrderWizard({ storeSlug }: OrderWizardProps) {
   const [stepIndex, setStepIndex] = useState(0)
   // The furthest step reached so far — lets the progress bar allow
@@ -47,7 +52,8 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
   // A refresh, a killed background tab, or a dropped connection would
   // otherwise erase an in-progress order with zero warning — restore
   // the small, plain-text fields (never the AI image, reference
-  // photos, or consent; see wizard-persistence.ts) if a draft exists.
+  // photos, catalog availability, or consent; see wizard-persistence.ts)
+  // if a draft exists.
   const [data, setData] = useState<WizardData>(() => {
     const draft = loadDraft(storeSlug)
     return draft ? { ...INITIAL_DATA, ...draft } : INITIAL_DATA
@@ -57,12 +63,12 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
   )
   // Generated once per wizard session and carried through unchanged —
   // this becomes the literal `orders.id` at submit time and the storage
-  // path prefix for both buckets. See docs/11_Customer_Order_Wizard.md §0.3.
+  // path prefix for both buckets.
   const [orderId] = useState(() => crypto.randomUUID())
 
   useEffect(() => {
     // Establish the guest's anonymous session as early as possible so
-    // it's already in place by the time Step 7 needs it. Submission
+    // it's already in place by the time submission needs it. Submission
     // also calls this defensively before posting, so a failure here
     // isn't fatal to the rest of the wizard.
     ensureAnonymousSession().catch((error) => {
@@ -76,6 +82,12 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
 
   useEffect(() => {
     saveDraft(storeSlug, {
+      specificationOptionId: data.specificationOptionId,
+      specificationLabel: data.specificationLabel,
+      flavorPackageOptionId: data.flavorPackageOptionId,
+      flavorPackageLabel: data.flavorPackageLabel,
+      cakeMessageChoice: data.cakeMessageChoice,
+      cakeMessage: data.cakeMessage,
       description: data.description,
       pickupDate: data.pickupDate,
       pickupTime: data.pickupTime,
@@ -85,6 +97,12 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
     })
   }, [
     storeSlug,
+    data.specificationOptionId,
+    data.specificationLabel,
+    data.flavorPackageOptionId,
+    data.flavorPackageLabel,
+    data.cakeMessageChoice,
+    data.cakeMessage,
     data.description,
     data.pickupDate,
     data.pickupTime,
@@ -136,40 +154,19 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
       </header>
 
       <main className="flex-1 overflow-y-auto px-4 py-6 pb-28">
-        {currentStep.id === "description" && (
-          <DescriptionStep
-            value={data.description}
-            onChange={(description) => updateData({ description })}
-          />
+        {currentStep.id === "cakeConfig" && (
+          <CakeConfigurationStep storeSlug={storeSlug} data={data} onChange={updateData} />
         )}
 
-        {currentStep.id === "generate" && (
-          <GeneratePreviewStep
+        {currentStep.id === "aiPreview" && (
+          <AiPreviewStep
             storeSlug={storeSlug}
             description={data.description}
-            previewImage={data.currentPreviewImage}
-            onGenerated={({ image, prompt }) =>
-              updateData({ currentPreviewImage: image, currentPreviewPrompt: prompt })
-            }
-          />
-        )}
-
-        {currentStep.id === "regenerate" && (
-          <RegeneratePreviewStep
-            storeSlug={storeSlug}
-            description={data.description}
-            previewImage={data.currentPreviewImage}
-            onGenerated={({ image, prompt }) =>
-              updateData({ currentPreviewImage: image, currentPreviewPrompt: prompt })
-            }
-          />
-        )}
-
-        {currentStep.id === "select" && (
-          <SelectPreviewStep
             previewImage={data.currentPreviewImage}
             previewPrompt={data.currentPreviewPrompt}
-            selectedPreviewImage={data.selectedPreviewImage}
+            onGenerated={({ image, prompt }) =>
+              updateData({ currentPreviewImage: image, currentPreviewPrompt: prompt })
+            }
             onSelect={({ image, prompt }) => {
               updateData({ selectedPreviewImage: image, selectedPreviewPrompt: prompt })
               goNext()

@@ -1,23 +1,31 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { AiPreviewDisclaimer } from "@/components/AiPreviewDisclaimer"
-import { PreviewReassuranceNote } from "@/components/PreviewReassuranceNote"
+import { AiPreviewGuidance } from "@/components/AiPreviewGuidance"
 
-interface GeneratePreviewStepProps {
+interface AiPreviewStepProps {
   storeSlug: string
   description: string
   previewImage: string | null
+  previewPrompt: string | null
   onGenerated: (result: { image: string; prompt: string }) => void
+  onSelect: (result: { image: string; prompt: string }) => void
 }
 
-export function GeneratePreviewStep({
+// Single consolidated screen replacing the prior Generate/Regenerate/
+// Select steps. Auto-generates the first candidate on arrival; "다시
+// 생성" replaces the current candidate without persisting the
+// discarded one anywhere; "이 디자인으로 진행" commits the current
+// candidate as selected and advances.
+export function AiPreviewStep({
   storeSlug,
   description,
   previewImage,
+  previewPrompt,
   onGenerated,
-}: GeneratePreviewStepProps) {
+  onSelect,
+}: AiPreviewStepProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -43,10 +51,20 @@ export function GeneratePreviewStep({
     }
   }
 
+  useEffect(() => {
+    // Auto-generate the first candidate the moment this step is
+    // reached. Returning to this step later, with a candidate already
+    // in hand, never re-triggers this.
+    if (!previewImage) {
+      handleGenerate()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold">미리보기 생성하기</h2>
+        <h2 className="text-lg font-semibold">AI 시안</h2>
         <p className="line-clamp-2 text-sm text-muted-foreground">
           &ldquo;{description || "—"}&rdquo;
         </p>
@@ -64,22 +82,29 @@ export function GeneratePreviewStep({
           />
         ) : (
           <p className="px-6 text-center text-sm text-muted-foreground">
-            아직 미리보기가 없어요 — 아래 버튼을 눌러 생성해 주세요
+            미리보기를 생성하지 못했어요 — 아래 버튼으로 다시 시도해 주세요
           </p>
         )}
       </div>
 
-      <AiPreviewDisclaimer />
-      <PreviewReassuranceNote />
+      <AiPreviewGuidance />
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <Button
-        onClick={handleGenerate}
-        disabled={isGenerating || description.trim().length < 10}
-      >
-        미리보기 생성
-      </Button>
+      <div className="flex gap-2">
+        <Button variant="outline" className="flex-1" onClick={handleGenerate} disabled={isGenerating}>
+          다시 생성
+        </Button>
+        <Button
+          className="flex-1"
+          onClick={() =>
+            previewImage && previewPrompt && onSelect({ image: previewImage, prompt: previewPrompt })
+          }
+          disabled={isGenerating || !previewImage || !previewPrompt}
+        >
+          이 디자인으로 진행
+        </Button>
+      </div>
     </div>
   )
 }

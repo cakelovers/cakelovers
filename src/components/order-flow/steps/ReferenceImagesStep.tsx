@@ -119,10 +119,11 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold">참고 사진 (선택)</h2>
+        <h2 className="text-lg font-semibold">참고사진 (선택)</h2>
         <p className="text-sm text-muted-foreground">
-          색상이나 스타일을 맞추는 데 도움이 되도록 사진을 최대 3장까지 첨부할 수
-          있어요. 이미 선택한 디자인은 바뀌지 않습니다.
+          방금 선택한 AI 시안은 분위기 참고용입니다. 캐릭터 그림체, 레터링
+          스타일, 세부 디자인을 정확히 반영하려면 참고 사진을 함께 등록해
+          주세요. (최대 3장)
         </p>
       </div>
 

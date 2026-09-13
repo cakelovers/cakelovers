@@ -124,7 +124,7 @@ export function CakeConfigurationStep({ storeSlug, data, onChange }: CakeConfigu
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-lg font-semibold">케이크 구성</h2>
+        <h2 className="font-heading text-lg font-semibold">케이크 구성</h2>
         <p className="text-sm text-muted-foreground">
           주문하실 케이크에 대해 알려주세요.
         </p>

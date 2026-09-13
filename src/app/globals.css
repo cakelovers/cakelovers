@@ -9,7 +9,9 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  /* Editorial serif for real headings (h1/h2 page and section titles) —
+     see layout.tsx. Body copy and field labels stay on --font-sans. */
+  --font-heading: var(--font-heading-serif);
   /* Wordmark only — see layout.tsx. Not used for body or headline copy. */
   --font-script: var(--font-script);
   --color-sidebar-ring: var(--sidebar-ring);

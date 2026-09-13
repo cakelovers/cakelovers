@@ -148,7 +148,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
   if (submittedOrderId) {
     return (
       <div className="flex flex-col items-center gap-2 py-12 text-center">
-        <h2 className="text-lg font-semibold">주문이 완료되었습니다!</h2>
+        <h2 className="font-heading text-lg font-semibold">주문이 완료되었습니다!</h2>
         <p className="text-sm text-muted-foreground">
           주문이 접수되었습니다. 주문 번호:
         </p>
@@ -163,7 +163,7 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold">검토 및 제출</h2>
+        <h2 className="font-heading text-lg font-semibold">검토 및 제출</h2>
         <p className="text-sm text-muted-foreground">
           제출하기 전에 내용이 맞는지 확인해 주세요.
         </p>

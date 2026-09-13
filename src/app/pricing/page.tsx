@@ -28,7 +28,7 @@ export default function PricingPage() {
         <Link href="/" className="text-sm text-muted-foreground underline">
           &larr; 홈으로
         </Link>
-        <h1 className="text-2xl font-semibold">이용 요금</h1>
+        <h1 className="font-heading text-2xl font-semibold">이용 요금</h1>
       </div>
 
       <div className="grid gap-0 divide-y divide-border border border-border sm:grid-cols-2 sm:divide-x sm:divide-y-0">

@@ -86,7 +86,7 @@ export function PickupStep({ storeSlug, pickupDate, pickupTime, onChange }: Pick
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold">픽업 날짜 및 시간</h2>
+        <h2 className="font-heading text-lg font-semibold">픽업 날짜 및 시간</h2>
         <p className="text-sm text-muted-foreground">
           매장에서 실제로 준비 가능한 시간만 표시됩니다.
         </p>

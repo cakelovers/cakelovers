@@ -137,7 +137,7 @@ export default async function OrderTrackingPage({
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 p-4">
       <div>
         <p className="text-xs text-muted-foreground">{store?.name ?? "케이크 주문"}</p>
-        <h1 className="text-lg font-semibold">주문 상태</h1>
+        <h1 className="font-heading text-lg font-semibold">주문 상태</h1>
       </div>
 
       <Badge variant={badgeVariantForStatus(order.status)} className="w-fit">
@@ -147,7 +147,7 @@ export default async function OrderTrackingPage({
       <PaymentStatusBlock order={order} settings={paymentSettings} timezone={timezone} />
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-medium">내 디자인</h2>
+        <h2 className="font-heading font-medium">내 디자인</h2>
         {previewSigned?.signedUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL
           <img
@@ -193,7 +193,7 @@ export default async function OrderTrackingPage({
       </Card>
 
       <section className="flex flex-col gap-1">
-        <h2 className="font-medium">등록된 연락처</h2>
+        <h2 className="font-heading font-medium">등록된 연락처</h2>
         <p className="text-sm">{customer?.name ?? "—"}</p>
         {customer?.phone && <p className="text-sm text-muted-foreground">{customer.phone}</p>}
         {customer?.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
@@ -309,7 +309,7 @@ function PaymentStatusBlock({
 function NotFoundMessage() {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-2 p-6 text-center">
-      <h1 className="text-lg font-semibold">주문을 찾을 수 없습니다</h1>
+      <h1 className="font-heading text-lg font-semibold">주문을 찾을 수 없습니다</h1>
       <p className="text-sm text-muted-foreground">
         해당 링크로 주문을 찾을 수 없습니다. 주문 확인 메시지의 링크를
         다시 확인하시거나 매장에 직접 문의해 주세요.

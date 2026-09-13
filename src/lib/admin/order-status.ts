@@ -77,3 +77,26 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
 export function formatStatusLabel(status: string): string {
   return STATUS_LABELS[status as OrderStatus] ?? status.replace(/_/g, " ")
 }
+
+// Which semantic Badge variant (components/ui/badge.tsx) each status
+// renders as — shared by the admin badge and the customer tracking
+// page's badge so the two never assign different colors to the same
+// status. "paid" reads as "progress" (same family as "making"/"ready")
+// since it's still an active, in-motion state from the customer's
+// perspective, not a waiting-on-them state like pricing/payment_pending.
+export const STATUS_BADGE_VARIANT: Record<
+  OrderStatus,
+  "wait" | "progress" | "done" | "cancel"
+> = {
+  pricing_pending: "wait",
+  payment_pending: "wait",
+  paid: "progress",
+  making: "progress",
+  ready: "wait",
+  completed: "done",
+  cancelled: "cancel",
+}
+
+export function badgeVariantForStatus(status: string): "wait" | "progress" | "done" | "cancel" {
+  return STATUS_BADGE_VARIANT[status as OrderStatus] ?? "wait"
+}

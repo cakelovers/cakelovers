@@ -18,6 +18,14 @@ const badgeVariants = cva(
         ghost:
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
+        // Order-status semantic variants — deliberately their own color
+        // family, separate from --primary/--destructive, so brand color
+        // and status meaning never collide (see OrderStatusBadge.tsx).
+        wait: "bg-[var(--status-wait-bg)] text-[var(--status-wait-fg)]",
+        progress:
+          "bg-[var(--status-progress-bg)] text-[var(--status-progress-fg)]",
+        done: "bg-[var(--status-done-bg)] text-[var(--status-done-fg)]",
+        cancel: "bg-[var(--status-cancel-bg)] text-[var(--status-cancel-fg)]",
       },
     },
     defaultVariants: {

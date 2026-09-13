@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { MAX_CAKE_MESSAGE_LENGTH, MAX_DESCRIPTION_LENGTH } from "@/lib/validation/description"
-import { PriceAdjustmentDisclaimer } from "@/components/PriceAdjustmentDisclaimer"
 import type { CakeMessageChoice, WizardData } from "../types"
 
 interface CakeOption {
@@ -158,7 +157,6 @@ export function CakeConfigurationStep({ storeSlug, data, onChange }: CakeConfigu
               </button>
             ))}
           </div>
-          <PriceAdjustmentDisclaimer />
         </div>
       )}
 
@@ -183,7 +181,6 @@ export function CakeConfigurationStep({ storeSlug, data, onChange }: CakeConfigu
               </button>
             ))}
           </div>
-          <PriceAdjustmentDisclaimer />
         </div>
       )}
 

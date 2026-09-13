@@ -3,6 +3,7 @@ import { formatKrw, formatInTimeZone } from "@/lib/payments/format"
 import { DEFAULT_PAYMENT_DEADLINE_HOURS } from "@/lib/admin/get-payment-settings"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { badgeVariantForStatus } from "@/lib/admin/order-status"
 import { AiPreviewGuidance } from "@/components/AiPreviewGuidance"
 
 const UUID_PATTERN =
@@ -139,7 +140,7 @@ export default async function OrderTrackingPage({
         <h1 className="text-lg font-semibold">주문 상태</h1>
       </div>
 
-      <Badge className="w-fit">
+      <Badge variant={badgeVariantForStatus(order.status)} className="w-fit">
         {CUSTOMER_BADGE[order.status] ?? order.status.replace(/_/g, " ")}
       </Badge>
 

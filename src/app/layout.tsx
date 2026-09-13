@@ -1,12 +1,26 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Gowun_Dodum, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// `variable` must be exactly "--font-sans" to match globals.css's
+// `@theme inline { --font-sans: var(--font-sans); }` — the previous font
+// here was wired as "--font-geist-sans", which never actually matched
+// that theme binding, so body text was silently falling back to
+// Tailwind's default sans stack rather than rendering in Geist at all.
+//
+// Gowun Dodum also ships only a single (400) weight — existing
+// font-semibold / font-bold utility classes across the app fall back to
+// the browser's synthetic bold for this face rather than a true bold
+// cut. This is a known, accepted tradeoff of the brand typography
+// decision, not a bug.
+const gowunDodum = Gowun_Dodum({
+  variable: "--font-sans",
+  weight: "400",
   subsets: ["latin"],
 });
 
+// Kept for the one monospace use in the app (the order id shown via
+// `font-mono` in ReviewStep.tsx) — Gowun Dodum has no monospace cut.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -25,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${gowunDodum.variable} ${geistMono.variable} antialiased`}
       >
         {children}
       </body>

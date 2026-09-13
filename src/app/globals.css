@@ -49,38 +49,54 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Cake Lovers brand palette (Design System v1 — cream/ivory foundation,
+     Dusty Mauve accent). Deliberately single-theme: the brand itself is a
+     light, cream-based identity with no dark variant defined yet, so
+     these are the only values this app currently paints — see the .dark
+     block below for the one-time note on why it's left as a fallback. */
+  --background: #F7F1E7;
+  --foreground: #3A2E22;
+  --card: #FFFCF6;
+  --card-foreground: #3A2E22;
+  --popover: #FFFCF6;
+  --popover-foreground: #3A2E22;
+  --primary: #9C6E77;
+  --primary-foreground: #FFFCF6;
+  --secondary: #EFE5D2;
+  --secondary-foreground: #3A2E22;
+  --muted: #EFE5D2;
+  --muted-foreground: #8B7A63;
+  --accent: #EDDCDD;
+  --accent-foreground: #82565E;
+  --destructive: #BF3B2E;
+  --border: #E4D7BF;
+  --input: #D8C7A6;
+  --ring: #9C6E77;
+  --chart-1: #9C6E77;
+  --chart-2: #82565E;
+  --chart-3: #8B7A63;
+  --chart-4: #B3A488;
+  --chart-5: #EDDCDD;
+  --radius: 0.75rem;
+  --sidebar: #FFFCF6;
+  --sidebar-foreground: #3A2E22;
+  --sidebar-primary: #9C6E77;
+  --sidebar-primary-foreground: #FFFCF6;
+  --sidebar-accent: #EFE5D2;
+  --sidebar-accent-foreground: #3A2E22;
+  --sidebar-border: #E4D7BF;
+  --sidebar-ring: #9C6E77;
+
+  /* Status badge semantic colors — deliberately separate from --primary
+     so brand color and order-status meaning never collide. */
+  --status-wait-bg: #F3E3C2;
+  --status-wait-fg: #8A6A1F;
+  --status-progress-bg: #DFE6D3;
+  --status-progress-fg: #55692F;
+  --status-done-bg: #EDDCDD;
+  --status-done-fg: #82565E;
+  --status-cancel-bg: #EAE2D3;
+  --status-cancel-fg: #8B7A63;
 }
 
 .dark {

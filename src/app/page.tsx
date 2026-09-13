@@ -50,10 +50,14 @@ export default function Home() {
       {/* Hero — the approved campaign photograph is the brand's primary
           visual identity. It must dominate the composition; headline,
           subcopy, and the single CTA sit over it as the only other
-          elements, no decorative graphics of any kind. */}
-      <section className="relative h-[85vh] min-h-[560px] w-full overflow-hidden">
+          elements, no decorative graphics of any kind. The section is
+          sized to the photo's own 11:6 aspect ratio (2816x1536) rather
+          than a fixed viewport height, so object-cover fills the frame
+          exactly with no cropping — the layout adapts to the photograph,
+          not the other way around. */}
+      <section className="relative aspect-[11/6] w-full overflow-hidden">
         <Image
-          src="/hero-cake.jpg"
+          src="/KakaoTalk_20260913_225801379.jpg"
           alt="Cake Lovers 시그니처 케이크"
           fill
           priority

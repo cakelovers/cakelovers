@@ -27,7 +27,7 @@ export default function Home() {
           cursive lettering piped onto the hero cake); every other string
           on this page stays on Gowun Dodum. */}
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-5">
-        <span className="font-script text-3xl text-primary">Cake Lovers</span>
+        <span className="font-script text-4xl leading-none text-primary">Cake Lovers</span>
         <Link href="/login" className="text-xs text-muted-foreground">
           사장님 로그인
         </Link>
@@ -93,24 +93,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Store-owner CTA — editorial and minimal: a thin underline under
-          the question, no card, no pricing table. Full plan details live
-          on /pricing. */}
+      {/* For bakers — a quiet utility footnote, not a second hero: same
+          restrained scale as body copy, a hairline underline instead of
+          a heading treatment, low-emphasis outline buttons. No card, no
+          pricing table. Full plan details live on /pricing. */}
       <section className="border-t border-border py-14">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-start gap-5 px-4 sm:px-10">
-          <div>
-            <h2 className="inline-block border-b border-foreground/30 pb-2 text-2xl font-semibold sm:text-3xl">
-              사장님이신가요?
-            </h2>
-            <p className="mt-3 text-sm text-muted-foreground">
-              (Cake Lovers와 함께 주문을 관리해보세요.)
-            </p>
-          </div>
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-start gap-4 px-4 sm:px-10">
+          <p className="inline-block border-b border-foreground/15 pb-3 text-sm leading-relaxed text-foreground">
+            Cake Lovers와 함께
+            <br />
+            주문을 관리해보세요.
+          </p>
           <div className="flex flex-wrap gap-3">
-            <Button asChild>
+            <Button asChild variant="outline" size="sm">
               <Link href="/login">사장님 로그인</Link>
             </Button>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" size="sm">
               <Link href="/pricing">이용 요금 보기</Link>
             </Button>
           </div>

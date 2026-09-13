@@ -119,13 +119,14 @@ export default function Home() {
 
       {/* For bakers — a quiet utility footnote, not a second hero: same
           restrained scale as body copy, a hairline underline instead of
-          a heading treatment, low-emphasis outline buttons. Lighter still
-          on mobile (smaller text, fainter underline, smaller buttons) so
-          it stays a footnote rather than competing for attention. No
-          card, no pricing table. Full plan details live on /pricing. */}
+          a heading treatment, low-emphasis outline buttons. Text color,
+          weight, and line-height are fixed (not responsive) so the copy
+          reads identically at every breakpoint — only font-size and the
+          underline/button sizing scale with viewport. No card, no
+          pricing table. Full plan details live on /pricing. */}
       <section className="border-t border-border py-10 sm:py-14">
         <div className="mx-auto flex w-full max-w-5xl flex-col items-start gap-3 px-4 sm:gap-4 sm:px-10">
-          <p className="inline-block border-b border-foreground/10 pb-2 text-xs leading-relaxed text-muted-foreground sm:border-foreground/15 sm:pb-3 sm:text-sm sm:text-foreground">
+          <p className="inline-block border-b border-foreground/10 pb-2 text-xs leading-relaxed font-normal text-muted-foreground sm:border-foreground/15 sm:pb-3 sm:text-sm">
             Cake Lovers와 함께
             <br />
             주문을 관리해보세요.

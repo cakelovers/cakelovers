@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Gowun_Dodum, Geist_Mono } from "next/font/google";
+import { Gowun_Dodum, Geist_Mono, Alex_Brush } from "next/font/google";
 import "./globals.css";
 
 // `variable` must be exactly "--font-sans" to match globals.css's
@@ -26,6 +26,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Script wordmark only — echoes the cursive lettering piped onto the
+// approved hero cake. Scoped to the "Cake Lovers" logotype via
+// `font-script` (see globals.css); every other headline and body string
+// stays on Gowun Dodum, per the typography freeze.
+const alexBrush = Alex_Brush({
+  variable: "--font-script",
+  weight: "400",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "Cake Lovers",
   description: "Custom cake ordering for local cake shops.",
@@ -39,7 +49,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${gowunDodum.variable} ${geistMono.variable} antialiased`}
+        className={`${gowunDodum.variable} ${geistMono.variable} ${alexBrush.variable} antialiased`}
       >
         {children}
       </body>

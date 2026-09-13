@@ -20,28 +20,14 @@ const ORDER_STORY = [
   },
 ]
 
-const PRICING_PLANS = [
-  {
-    name: "Basic",
-    price: "₩19,000",
-    description: "온라인 주문을 처음 시작하는 매장을 위한 요금제입니다.",
-    features: ["주문 위저드", "AI 케이크 미리보기", "주문 관리", "진행 상태 확인"],
-  },
-  {
-    name: "Pro",
-    price: "₩49,000 ~ ₩59,000",
-    description: "더 많은 주문을 처리하는 매장을 위한 요금제입니다.",
-    features: ["Basic 전체 포함", "더 많은 미리보기 생성", "우선 지원", "신규 기능 우선 제공"],
-    highlighted: true,
-  },
-]
-
 export default function Home() {
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      {/* Header */}
+      {/* Header — the script wordmark is the brand logotype (echoes the
+          cursive lettering piped onto the hero cake); every other string
+          on this page stays on Gowun Dodum. */}
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-5">
-        <span className="text-sm font-bold tracking-[0.12em]">CAKE LOVERS</span>
+        <span className="font-script text-3xl text-primary">Cake Lovers</span>
         <Link href="/login" className="text-xs text-muted-foreground">
           사장님 로그인
         </Link>
@@ -107,36 +93,26 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing — plain typography, no cards or checkmark icons. */}
+      {/* Store-owner CTA — editorial and minimal: a thin underline under
+          the question, no card, no pricing table. Full plan details live
+          on /pricing. */}
       <section className="border-t border-border py-14">
-        <div className="mx-auto w-full max-w-5xl px-4 sm:px-10">
-          <p className="mb-8 text-xs tracking-[0.1em] text-muted-foreground uppercase">
-            이용 요금
-          </p>
-          <div className="grid gap-0 divide-y divide-border border border-border sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-            {PRICING_PLANS.map((plan) => (
-              <div key={plan.name} className="flex flex-col gap-4 p-6">
-                <div>
-                  <p className="text-xs tracking-[0.06em] text-muted-foreground uppercase">
-                    {plan.name}
-                    {plan.highlighted && " · 인기"}
-                  </p>
-                  <p className="mt-2 text-2xl font-bold">
-                    {plan.price}
-                    <span className="text-sm font-normal text-muted-foreground">/월</span>
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
-                </div>
-                <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-                  {plan.features.map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
-                <Button asChild variant={plan.highlighted ? "default" : "outline"} className="mt-2 self-start">
-                  <Link href="/login">시작하기</Link>
-                </Button>
-              </div>
-            ))}
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-start gap-5 px-4 sm:px-10">
+          <div>
+            <h2 className="inline-block border-b border-foreground/30 pb-2 text-2xl font-semibold sm:text-3xl">
+              사장님이신가요?
+            </h2>
+            <p className="mt-3 text-sm text-muted-foreground">
+              (Cake Lovers와 함께 주문을 관리해보세요.)
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild>
+              <Link href="/login">사장님 로그인</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/pricing">이용 요금 보기</Link>
+            </Button>
           </div>
         </div>
       </section>

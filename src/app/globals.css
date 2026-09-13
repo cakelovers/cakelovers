@@ -149,11 +149,15 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* font-sans is applied here, not on <html>, because next/font's CSS
+     variable (--font-sans) is injected via a className on <body> (see
+     layout.tsx). Custom properties only cascade to descendants, so a
+     rule on <html> — body's ancestor — could never see that variable
+     and would silently fall back to the browser's default serif
+     (Times New Roman) for the entire page. Confirmed via DevTools:
+     this was the actual reason no custom font was ever rendering. */
   body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
+    @apply bg-background text-foreground font-sans;
   }
   /* Korean text must only break at word boundaries — without this, a
      narrow container can split a word or a particle mid-character

@@ -14,6 +14,7 @@ import { getSiteUrl } from "@/lib/site-url"
 import { StatusUpdateForm } from "@/components/admin/StatusUpdateForm"
 import { InternalNoteForm } from "@/components/admin/InternalNoteForm"
 import { PaymentSection } from "@/components/admin/payment/PaymentSection"
+import { Card, CardContent } from "@/components/ui/card"
 
 const FALLBACK_TIMEZONE = "Asia/Seoul"
 
@@ -173,19 +174,21 @@ export default async function OrderDetailPage({
         paymentMessage={paymentMessage}
       />
 
-      <section className="flex flex-col gap-2">
-        <h2 className="font-medium">AI 생성 디자인 (고객 승인 완료)</h2>
-        {previewSigned?.signedUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL
-          <img
-            src={previewSigned.signedUrl}
-            alt="고객이 승인한 AI 케이크 디자인"
-            className="w-full max-w-sm rounded-md border object-cover"
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground">미리보기 이미지를 불러올 수 없습니다.</p>
-        )}
-      </section>
+      <Card>
+        <CardContent className="flex flex-col gap-2">
+          <h2 className="font-medium">AI 생성 디자인 (고객 승인 완료)</h2>
+          {previewSigned?.signedUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL
+            <img
+              src={previewSigned.signedUrl}
+              alt="고객이 승인한 AI 케이크 디자인"
+              className="w-full max-w-sm rounded-md border object-cover"
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">미리보기 이미지를 불러올 수 없습니다.</p>
+          )}
+        </CardContent>
+      </Card>
 
       <section className="flex flex-col gap-2">
         <h2 className="font-medium">참고 사진 (제작 참고용)</h2>
@@ -212,10 +215,12 @@ export default async function OrderDetailPage({
         )}
       </section>
 
-      <section className="flex flex-col gap-1">
-        <h2 className="font-medium">설명</h2>
-        <p className="text-sm">{order.description}</p>
-      </section>
+      <Card>
+        <CardContent className="flex flex-col gap-1">
+          <h2 className="font-medium">설명</h2>
+          <p className="text-sm">{order.description}</p>
+        </CardContent>
+      </Card>
 
       {order.customer_note && (
         <section className="flex flex-col gap-1">
@@ -240,19 +245,23 @@ export default async function OrderDetailPage({
         </section>
       )}
 
-      <section className="flex flex-col gap-1">
-        <h2 className="font-medium">고객</h2>
-        <p className="text-sm">{customer?.name ?? "알 수 없음"}</p>
-        {customer?.phone && <p className="text-sm text-muted-foreground">{customer.phone}</p>}
-        {customer?.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
-      </section>
+      <Card>
+        <CardContent className="flex flex-col gap-1">
+          <h2 className="font-medium">고객</h2>
+          <p className="text-sm">{customer?.name ?? "알 수 없음"}</p>
+          {customer?.phone && <p className="text-sm text-muted-foreground">{customer.phone}</p>}
+          {customer?.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
+        </CardContent>
+      </Card>
 
-      <section className="flex flex-col gap-1">
-        <h2 className="font-medium">픽업</h2>
-        <p className="text-sm">
-          {order.pickup_date} {order.pickup_time}
-        </p>
-      </section>
+      <Card>
+        <CardContent className="flex flex-col gap-1">
+          <h2 className="font-medium">픽업</h2>
+          <p className="text-sm">
+            {order.pickup_date} {order.pickup_time}
+          </p>
+        </CardContent>
+      </Card>
 
       <InternalNoteForm storeSlug={storeSlug} orderId={orderId} initialNote={order.internal_note ?? ""} />
     </div>

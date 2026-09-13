@@ -36,7 +36,7 @@ export default function Home() {
     <div className="flex min-h-dvh flex-col bg-background">
       {/* Header — the script wordmark is the brand logotype (echoes the
           cursive lettering piped onto the hero cake); every other string
-          on this page stays on Gowun Dodum. */}
+          on this page stays on Gowun Batang. */}
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-5">
         <span className="font-script text-4xl leading-none text-primary">Cake Lovers</span>
         <Link href="/login" className="text-xs text-muted-foreground">

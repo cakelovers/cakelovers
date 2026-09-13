@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  /* One UI typeface (Gowun Dodum) for everything — headings, body,
+  /* One UI typeface (Gowun Batang) for everything — headings, body,
      buttons, labels. No separate heading face. See layout.tsx. */
   /* Wordmark only — see layout.tsx. Not used for body or headline copy. */
   --font-script: var(--font-script);

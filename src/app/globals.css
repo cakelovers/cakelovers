@@ -83,10 +83,12 @@
   --chart-3: #7A6A5E;
   --chart-4: #E7A9C2;
   --chart-5: #F3ECD3;
-  /* Sharp, editorial-restraint corners (2px) — pill/rounded-full shapes
-     read as a friendly app; a near-flat radius reads as a premium
-     product/retail surface instead. */
-  --radius: 0.125rem;
+  /* Editorial-restraint corners (~4px on the base rounded-lg scale) —
+     softened slightly from the original 2px per user feedback that
+     buttons felt too sharp. Still deliberately far from pill/rounded-full
+     shapes, which read as a friendly app rather than a premium
+     product/retail surface. */
+  --radius: 0.25rem;
   --sidebar: #FFFFFF;
   --sidebar-foreground: #47131C;
   --sidebar-primary: #47131C;

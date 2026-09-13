@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
@@ -46,32 +47,39 @@ export default function Home() {
         </Link>
       </header>
 
-      {/* Hero — the cake photograph is the dominant element, not the copy.
-          Placeholder gradient stands in for a real flash-lit product
-          photograph (glossy icing, pearls, macro texture) until that
-          asset is shot — never an illustrated substitute. */}
-      <section className="relative h-[70vh] min-h-[480px] w-full overflow-hidden bg-[linear-gradient(165deg,#E9DDBD_0%,#D9C79A_28%,#8A6A52_60%,#47131C_100%)]">
-        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-primary/75 via-primary/15 to-transparent p-6 sm:p-10">
-          <div className="mx-auto w-full max-w-5xl">
-            <h1 className="text-3xl leading-snug font-bold text-primary-foreground sm:text-4xl">
-              주문제작 케이크를
-              <br />
-              더 편하게.
-            </h1>
-            <p className="mt-3 max-w-xs text-sm leading-relaxed text-primary-foreground/85">
-              원하는 모습을 적기만 하면,
-              <br />
-              나머지는 저희가 준비할게요.
-            </p>
+      {/* Hero — the approved campaign photograph is the brand's primary
+          visual identity. It must dominate the composition; headline,
+          subcopy, and the single CTA sit over it as the only other
+          elements, no decorative graphics of any kind. */}
+      <section className="relative h-[85vh] min-h-[560px] w-full overflow-hidden">
+        <Image
+          src="/hero-cake.jpg"
+          alt="Cake Lovers 시그니처 케이크"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-primary/80 via-primary/10 to-transparent p-6 sm:p-12">
+          <div className="mx-auto flex w-full max-w-5xl flex-col items-start gap-6">
+            <div>
+              <h1 className="text-3xl leading-snug font-bold text-primary-foreground sm:text-5xl">
+                주문제작 케이크를
+                <br />
+                더 편하게.
+              </h1>
+              <p className="mt-3 max-w-xs text-sm leading-relaxed text-primary-foreground/85">
+                원하는 모습을 적기만 하면,
+                <br />
+                나머지는 저희가 준비할게요.
+              </p>
+            </div>
+            <Button asChild size="lg">
+              <Link href="/s/demo-store/order">케이크 주문하기</Link>
+            </Button>
           </div>
         </div>
       </section>
-
-      <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-10">
-        <Button asChild size="lg">
-          <Link href="/s/demo-store/order">케이크 주문하기</Link>
-        </Button>
-      </div>
 
       {/* Order story — real photography at each step, not icons. */}
       <section className="border-t border-border py-14">

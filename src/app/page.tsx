@@ -1,43 +1,21 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 
-const HOW_IT_WORKS = [
+const ORDER_STORY = [
   {
-    step: "1",
-    title: "Describe your cake",
-    description: "Tell us the flavor, colors, theme — whatever you have in mind, in plain words.",
+    step: "01",
+    title: "설명 작성",
+    description: "원하는 모습을 자유롭게 적어주세요.",
   },
   {
-    step: "2",
-    title: "See an AI preview",
-    description: "Get a real preview image generated from your description in seconds, and regenerate until it's right.",
+    step: "02",
+    title: "AI 미리보기",
+    description: "주문 전에 먼저 확인하세요.",
   },
   {
-    step: "3",
-    title: "Pick a pickup time",
-    description: "Choose a date and time, add any extra notes for the shop, and submit.",
-  },
-  {
-    step: "4",
-    title: "The shop bakes it",
-    description: "Your shop sees exactly what you approved — no back-and-forth over DMs — and gets it ready for pickup.",
-  },
-]
-
-const SHOP_BENEFITS = [
-  {
-    title: "One place for every order",
-    description: "No more scattered screenshots across Instagram DMs and text messages.",
-  },
-  {
-    title: "See the approved design up front",
-    description: "Every order arrives with the exact AI preview the customer picked, plus any reference photos.",
-  },
-  {
-    title: "A simple status pipeline",
-    description: "Move each order forward as you work on it, from new through to ready for pickup.",
+    step: "03",
+    title: "완성 케이크",
+    description: "가까운 매장에서 픽업하세요.",
   },
 ]
 
@@ -45,24 +23,14 @@ const PRICING_PLANS = [
   {
     name: "Basic",
     price: "₩19,000",
-    description: "For a single shop just getting started with online cake orders.",
-    features: [
-      "Customer ordering wizard",
-      "AI cake preview generation",
-      "Order dashboard for your shop",
-      "Order status tracking",
-    ],
+    description: "온라인 주문을 처음 시작하는 매장을 위한 요금제입니다.",
+    features: ["주문 위저드", "AI 케이크 미리보기", "주문 관리", "진행 상태 확인"],
   },
   {
     name: "Pro",
     price: "₩49,000 ~ ₩59,000",
-    description: "For shops that want more room to grow.",
-    features: [
-      "Everything in Basic",
-      "Higher AI preview generation limits",
-      "Priority support",
-      "Early access to new features",
-    ],
+    description: "더 많은 주문을 처리하는 매장을 위한 요금제입니다.",
+    features: ["Basic 전체 포함", "더 많은 미리보기 생성", "우선 지원", "신규 기능 우선 제공"],
     highlighted: true,
   },
 ]
@@ -71,137 +39,97 @@ export default function Home() {
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       {/* Header */}
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4">
-        <span className="text-lg font-semibold">🎂 Cake Lovers</span>
-        <Link href="/login" className="text-sm text-muted-foreground underline">
-          Shop owner sign in
+      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-5">
+        <span className="text-sm font-bold tracking-[0.12em]">CAKE LOVERS</span>
+        <Link href="/login" className="text-xs text-muted-foreground">
+          사장님 로그인
         </Link>
       </header>
 
-      {/* Hero */}
-      <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-4 py-16 text-center sm:py-24">
-        <Badge variant="secondary">AI-powered custom cake ordering</Badge>
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          Design your dream cake before you order it.
-        </h1>
-        <p className="max-w-xl text-balance text-muted-foreground sm:text-lg">
-          Describe the cake you want, get an AI-generated preview in seconds,
-          and send your order straight to a local cake shop — no more
-          guesswork on either side.
-        </p>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button asChild size="lg">
-            <Link href="/s/demo-store/order">Start Designing</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="/login">Cake Shop Demo</Link>
-          </Button>
+      {/* Hero — the cake photograph is the dominant element, not the copy.
+          Placeholder gradient stands in for a real flash-lit product
+          photograph (glossy icing, pearls, macro texture) until that
+          asset is shot — never an illustrated substitute. */}
+      <section className="relative h-[70vh] min-h-[480px] w-full overflow-hidden bg-[linear-gradient(165deg,#E9DDBD_0%,#D9C79A_28%,#8A6A52_60%,#47131C_100%)]">
+        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-primary/75 via-primary/15 to-transparent p-6 sm:p-10">
+          <div className="mx-auto w-full max-w-5xl">
+            <h1 className="text-3xl leading-snug font-bold text-primary-foreground sm:text-4xl">
+              주문제작 케이크를
+              <br />
+              더 편하게.
+            </h1>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-primary-foreground/85">
+              원하는 모습을 적기만 하면,
+              <br />
+              나머지는 저희가 준비할게요.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* AI cake generation feature */}
-      <section className="mx-auto w-full max-w-3xl px-4 py-12">
-        <Card>
-          <CardHeader>
-            <Badge className="w-fit">AI Preview</Badge>
-            <CardTitle className="text-2xl">
-              See your cake before anyone bakes it
-            </CardTitle>
-            <CardDescription>
-              Just describe what you want in your own words — no design
-              skills needed. Our AI generates a realistic preview image, and
-              you can regenerate as many times as you like until it matches
-              what&apos;s in your head. Only the design you actually pick
-              ever gets sent to the shop.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </section>
+      <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-10">
+        <Button asChild size="lg">
+          <Link href="/s/demo-store/order">케이크 주문하기</Link>
+        </Button>
+      </div>
 
-      {/* How it works */}
-      <section className="mx-auto w-full max-w-4xl px-4 py-12">
-        <h2 className="mb-8 text-center text-2xl font-semibold">How it works</h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {HOW_IT_WORKS.map((item) => (
-            <div key={item.step} className="flex flex-col gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                {item.step}
-              </div>
-              <h3 className="font-medium">{item.title}</h3>
-              <p className="text-sm text-muted-foreground">{item.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Benefits for shop owners */}
-      <section className="mx-auto w-full max-w-4xl px-4 py-12">
-        <h2 className="mb-8 text-center text-2xl font-semibold">
-          Built for cake shop owners
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {SHOP_BENEFITS.map((benefit) => (
-            <Card key={benefit.title}>
-              <CardHeader>
-                <CardTitle className="text-base">{benefit.title}</CardTitle>
-                <CardDescription>{benefit.description}</CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section className="mx-auto w-full max-w-4xl px-4 py-12">
-        <h2 className="mb-8 text-center text-2xl font-semibold">
-          Pricing for shop owners
-        </h2>
-        <div className="grid gap-6 sm:grid-cols-2">
-          {PRICING_PLANS.map((plan) => (
-            <Card key={plan.name} className={plan.highlighted ? "border-primary" : undefined}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>{plan.name}</CardTitle>
-                  {plan.highlighted && <Badge>Popular</Badge>}
+      {/* Order story — real photography at each step, not icons. */}
+      <section className="border-t border-border py-14">
+        <div className="mx-auto w-full max-w-5xl px-4 sm:px-10">
+          <p className="mb-8 text-xs tracking-[0.1em] text-muted-foreground uppercase">
+            이렇게 주문해요
+          </p>
+          <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
+            {ORDER_STORY.map((item) => (
+              <div key={item.step} className="flex flex-col gap-3 bg-card p-6">
+                {/* Photo placeholder for this step — real photography TBD */}
+                <div className="aspect-[4/3] w-full rounded-lg bg-muted" />
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground">{item.step}</p>
+                  <h3 className="mt-1 font-medium">{item.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
                 </div>
-                <p className="text-2xl font-bold">
-                  {plan.price}
-                  <span className="text-sm font-normal text-muted-foreground">/mo</span>
-                </p>
-                <CardDescription>{plan.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3">
-                <ul className="flex flex-col gap-1.5 text-sm">
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing — plain typography, no cards or checkmark icons. */}
+      <section className="border-t border-border py-14">
+        <div className="mx-auto w-full max-w-5xl px-4 sm:px-10">
+          <p className="mb-8 text-xs tracking-[0.1em] text-muted-foreground uppercase">
+            이용 요금
+          </p>
+          <div className="grid gap-0 divide-y divide-border border border-border sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+            {PRICING_PLANS.map((plan) => (
+              <div key={plan.name} className="flex flex-col gap-4 p-6">
+                <div>
+                  <p className="text-xs tracking-[0.06em] text-muted-foreground uppercase">
+                    {plan.name}
+                    {plan.highlighted && " · 인기"}
+                  </p>
+                  <p className="mt-2 text-2xl font-bold">
+                    {plan.price}
+                    <span className="text-sm font-normal text-muted-foreground">/월</span>
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
+                </div>
+                <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2">
-                      <span className="text-primary">✓</span>
-                      <span>{feature}</span>
-                    </li>
+                    <li key={feature}>{feature}</li>
                   ))}
                 </ul>
-                <Button asChild variant={plan.highlighted ? "default" : "outline"}>
-                  <Link href="/login">Get Started</Link>
+                <Button asChild variant={plan.highlighted ? "default" : "outline"} className="mt-2 self-start">
+                  <Link href="/login">시작하기</Link>
                 </Button>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-4 py-16 text-center">
-        <h2 className="text-2xl font-semibold">Ready to order or run a shop?</h2>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button asChild size="lg">
-            <Link href="/s/demo-store/order">Start Designing</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="/login">Cake Shop Demo</Link>
-          </Button>
-        </div>
-      </section>
-
-      <footer className="mx-auto flex w-full max-w-5xl flex-col items-center gap-2 px-4 py-8 text-center text-xs text-muted-foreground">
+      <footer className="mx-auto flex w-full max-w-5xl flex-col items-center gap-2 border-t border-border px-4 py-8 text-center text-xs text-muted-foreground">
         <Link href="/privacy" className="underline">
           개인정보처리방침
         </Link>

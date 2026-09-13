@@ -41,7 +41,7 @@ export function WizardProgress({
               onClick={() => onStepClick?.(index)}
               disabled={!onStepClick || !isReachable}
               className={cn(
-                "h-1.5 flex-1 rounded-full transition-colors",
+                "h-1 flex-1 rounded-sm transition-colors",
                 isActiveOrComplete ? "bg-primary" : "bg-muted"
               )}
             />

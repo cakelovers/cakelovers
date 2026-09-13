@@ -146,7 +146,7 @@ export function CakeConfigurationStep({ storeSlug, data, onChange }: CakeConfigu
                 type="button"
                 onClick={() => selectSpecification(option)}
                 className={cn(
-                  "rounded-full border px-3 py-1.5 text-sm",
+                  "rounded-lg border px-3 py-1.5 text-sm",
                   data.specificationOptionId === option.id
                     ? "border-primary bg-primary text-primary-foreground"
                     : "bg-muted/40"
@@ -170,7 +170,7 @@ export function CakeConfigurationStep({ storeSlug, data, onChange }: CakeConfigu
                 type="button"
                 onClick={() => selectFlavorPackage(option)}
                 className={cn(
-                  "rounded-full border px-3 py-1.5 text-sm",
+                  "rounded-lg border px-3 py-1.5 text-sm",
                   data.flavorPackageOptionId === option.id
                     ? "border-primary bg-primary text-primary-foreground"
                     : "bg-muted/40"

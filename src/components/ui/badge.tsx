@@ -25,7 +25,7 @@ const badgeVariants = cva(
         progress:
           "bg-[var(--status-progress-bg)] text-[var(--status-progress-fg)]",
         done: "bg-[var(--status-done-bg)] text-[var(--status-done-fg)]",
-        cancel: "bg-[var(--status-cancel-bg)] text-[var(--status-cancel-fg)]",
+        cancel: "border-border text-[var(--status-cancel-fg)]",
       },
     },
     defaultVariants: {

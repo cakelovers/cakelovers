@@ -49,54 +49,61 @@
 }
 
 :root {
-  /* Cake Lovers brand palette (Design System v1 — cream/ivory foundation,
-     Dusty Mauve accent). Deliberately single-theme: the brand itself is a
-     light, cream-based identity with no dark variant defined yet, so
-     these are the only values this app currently paints — see the .dark
-     block below for the one-time note on why it's left as a fallback. */
-  --background: #F7F1E7;
-  --foreground: #3A2E22;
-  --card: #FFFCF6;
-  --card-foreground: #3A2E22;
-  --popover: #FFFCF6;
-  --popover-foreground: #3A2E22;
-  --primary: #9C6E77;
-  --primary-foreground: #FFFCF6;
-  --secondary: #EFE5D2;
-  --secondary-foreground: #3A2E22;
-  --muted: #EFE5D2;
-  --muted-foreground: #8B7A63;
-  --accent: #EDDCDD;
-  --accent-foreground: #82565E;
+  /* Cake Lovers brand palette — Cosmic Latte / Cherry Cola / Cotton
+     Candy, the approved editorial-campaign direction (fashion/luxury
+     product advertisement, not a SaaS or bakery-management look).
+     Deliberately single-theme: the brand itself is a light, cream-based
+     identity with no dark variant defined yet, so these are the only
+     values this app currently paints — see the .dark block below for
+     the one-time note on why it's left as a fallback. */
+  --background: #FFF8E7;
+  --foreground: #47131C;
+  --card: #FFFFFF;
+  --card-foreground: #47131C;
+  --popover: #FFFFFF;
+  --popover-foreground: #47131C;
+  --primary: #47131C;
+  --primary-foreground: #FFF8E7;
+  --secondary: #FFD7E7;
+  --secondary-foreground: #47131C;
+  --muted: #F3ECD3;
+  --muted-foreground: #7A6A5E;
+  --accent: #FFD7E7;
+  --accent-foreground: #47131C;
   --destructive: #BF3B2E;
-  --border: #E4D7BF;
-  --input: #D8C7A6;
-  --ring: #9C6E77;
-  --chart-1: #9C6E77;
-  --chart-2: #82565E;
-  --chart-3: #8B7A63;
-  --chart-4: #B3A488;
-  --chart-5: #EDDCDD;
-  --radius: 0.75rem;
-  --sidebar: #FFFCF6;
-  --sidebar-foreground: #3A2E22;
-  --sidebar-primary: #9C6E77;
-  --sidebar-primary-foreground: #FFFCF6;
-  --sidebar-accent: #EFE5D2;
-  --sidebar-accent-foreground: #3A2E22;
-  --sidebar-border: #E4D7BF;
-  --sidebar-ring: #9C6E77;
+  --border: #E7DFC4;
+  --input: #E7DFC4;
+  --ring: #47131C;
+  --chart-1: #47131C;
+  --chart-2: #FFD7E7;
+  --chart-3: #7A6A5E;
+  --chart-4: #E7A9C2;
+  --chart-5: #F3ECD3;
+  /* Sharp, editorial-restraint corners (2px) — pill/rounded-full shapes
+     read as a friendly app; a near-flat radius reads as a premium
+     product/retail surface instead. */
+  --radius: 0.125rem;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #47131C;
+  --sidebar-primary: #47131C;
+  --sidebar-primary-foreground: #FFF8E7;
+  --sidebar-accent: #FFD7E7;
+  --sidebar-accent-foreground: #47131C;
+  --sidebar-border: #E7DFC4;
+  --sidebar-ring: #47131C;
 
   /* Status badge semantic colors — deliberately separate from --primary
-     so brand color and order-status meaning never collide. */
-  --status-wait-bg: #F3E3C2;
-  --status-wait-fg: #8A6A1F;
-  --status-progress-bg: #DFE6D3;
-  --status-progress-fg: #55692F;
-  --status-done-bg: #EDDCDD;
-  --status-done-fg: #82565E;
-  --status-cancel-bg: #EAE2D3;
-  --status-cancel-fg: #8B7A63;
+     so brand color and order-status meaning never collide. Kept as
+     distinct filled/outline tags (not plain text) so admin stays
+     scannable at a glance. */
+  --status-wait-bg: #F0E7CC;
+  --status-wait-fg: #7A6A5E;
+  --status-progress-bg: #FFD7E7;
+  --status-progress-fg: #47131C;
+  --status-done-bg: #47131C;
+  --status-done-fg: #FFF8E7;
+  --status-cancel-bg: transparent;
+  --status-cancel-fg: #9C8F79;
 }
 
 .dark {
@@ -142,5 +149,13 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Korean text must only break at word boundaries — without this, a
+     narrow container can split a word or a particle mid-character
+     (e.g. "매장에\n서" instead of "매장에서\n"), which reads as broken
+     copy rather than a real line wrap. */
+  body {
+    word-break: keep-all;
+    overflow-wrap: normal;
   }
 }

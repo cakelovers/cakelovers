@@ -60,7 +60,7 @@ export default async function OrdersPage({
 
   return (
     <div className="flex flex-col gap-3 p-4">
-      <h1 className="font-heading text-lg font-semibold">주문 목록</h1>
+      <h1 className="text-lg font-semibold">주문 목록</h1>
 
       {rows.length === 0 && (
         <p className="text-sm text-muted-foreground">아직 주문이 없습니다.</p>

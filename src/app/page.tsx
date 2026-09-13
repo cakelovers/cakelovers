@@ -64,7 +64,7 @@ export default function Home() {
         <div className="absolute inset-0 flex items-end bg-gradient-to-t from-primary/80 via-primary/10 to-transparent p-5 sm:p-12">
           <div className="mx-auto flex w-full max-w-5xl flex-col items-start gap-3 sm:gap-6">
             <div>
-              <h1 className="font-heading text-xl leading-snug font-bold text-primary-foreground sm:text-5xl">
+              <h1 className="text-xl leading-snug font-bold text-primary-foreground sm:text-5xl">
                 주문제작 케이크를
                 <br />
                 더 편하게.
@@ -108,7 +108,7 @@ export default function Home() {
                 )}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground">{item.step}</p>
-                  <h3 className="font-heading mt-1 text-sm font-medium sm:text-base">{item.title}</h3>
+                  <h3 className="mt-1 text-sm font-medium sm:text-base">{item.title}</h3>
                   <p className="mt-1 text-xs text-muted-foreground sm:text-sm">{item.description}</p>
                 </div>
               </div>
@@ -123,7 +123,7 @@ export default function Home() {
           weight, and line-height are fixed (not responsive) so the copy
           reads identically at every breakpoint — only font-size and the
           underline/button sizing scale with viewport. No card, no
-          pricing table. Full plan details live on /pricing. */}
+          pricing table. Full store-owner content lives on /for-bakers. */}
       <section className="border-t border-border py-10 sm:py-14">
         <div className="mx-auto flex w-full max-w-5xl flex-col items-start gap-3 px-4 sm:gap-4 sm:px-10">
           <p className="inline-block border-b border-foreground/10 pb-2 text-xs leading-relaxed font-normal text-muted-foreground sm:border-foreground/15 sm:pb-3 sm:text-sm">
@@ -136,7 +136,7 @@ export default function Home() {
               <Link href="/login">사장님 로그인</Link>
             </Button>
             <Button asChild variant="outline" size="xs" className="sm:h-7 sm:px-2.5 sm:text-[0.8rem]">
-              <Link href="/pricing">이용 요금 보기</Link>
+              <Link href="/for-bakers">이용 요금 보기</Link>
             </Button>
           </div>
         </div>

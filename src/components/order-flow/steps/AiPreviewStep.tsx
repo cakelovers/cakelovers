@@ -64,7 +64,7 @@ export function AiPreviewStep({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="font-heading text-lg font-semibold">AI 시안</h2>
+        <h2 className="text-lg font-semibold">AI 시안</h2>
         <p className="line-clamp-2 text-sm text-muted-foreground">
           &ldquo;{description || "—"}&rdquo;
         </p>

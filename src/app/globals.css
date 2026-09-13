@@ -9,9 +9,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  /* Editorial serif for real headings (h1/h2 page and section titles) —
-     see layout.tsx. Body copy and field labels stay on --font-sans. */
-  --font-heading: var(--font-heading-serif);
+  /* One UI typeface (Gowun Dodum) for everything — headings, body,
+     buttons, labels. No separate heading face. See layout.tsx. */
   /* Wordmark only — see layout.tsx. Not used for body or headline copy. */
   --font-script: var(--font-script);
   --color-sidebar-ring: var(--sidebar-ring);

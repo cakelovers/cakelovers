@@ -34,7 +34,7 @@ export default async function StoreSettingsPage({
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-lg font-semibold">결제 설정</h1>
+          <h1 className="text-lg font-semibold">결제 설정</h1>
           <p className="text-sm text-muted-foreground">
             여기에 입력한 계좌 정보는 고객에게 보내는 결제 요청 메시지에
             포함됩니다. 견적이 발송된 이후에는 고객도 본인의 주문 페이지에서
@@ -46,7 +46,7 @@ export default async function StoreSettingsPage({
 
       <div className="flex flex-col gap-4 border-t pt-8">
         <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-lg font-semibold">픽업 설정</h1>
+          <h1 className="text-lg font-semibold">픽업 설정</h1>
           <p className="text-sm text-muted-foreground">
             요일별로 픽업 가능 여부, 운영 시간, 최소 준비 시간을 설정합니다.
             고객이 주문 시 선택할 수 있는 픽업 시간에 바로 반영됩니다.
@@ -57,7 +57,7 @@ export default async function StoreSettingsPage({
 
       <div className="flex flex-col gap-4 border-t pt-8">
         <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-lg font-semibold">케이크 구성 옵션</h1>
+          <h1 className="text-lg font-semibold">케이크 구성 옵션</h1>
           <p className="text-sm text-muted-foreground">
             규격과 맛 패키지를 매장에 맞게 등록하세요. 등록된 옵션만 고객 주문 화면에
             표시됩니다. 옵션을 삭제하는 대신 &ldquo;사용&rdquo; 체크를 해제해 비활성화할 수

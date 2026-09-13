@@ -65,7 +65,7 @@ export default function LoginPage() {
   if (sent) {
     return (
       <div className="mx-auto flex max-w-sm flex-col gap-2 p-6 text-center">
-        <h1 className="font-heading text-lg font-semibold">이메일을 확인해 주세요</h1>
+        <h1 className="text-lg font-semibold">이메일을 확인해 주세요</h1>
         <p className="text-sm text-muted-foreground">
           {email} 주소로 로그인 링크를 보내드렸어요.
         </p>
@@ -75,7 +75,7 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto flex max-w-sm flex-col gap-4 p-6">
-      <h1 className="font-heading text-lg font-semibold">사장님 로그인</h1>
+      <h1 className="text-lg font-semibold">사장님 로그인</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email">이메일</Label>

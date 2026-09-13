@@ -119,7 +119,7 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="font-heading text-lg font-semibold">참고사진 (선택)</h2>
+        <h2 className="text-lg font-semibold">참고사진 (선택)</h2>
         <p className="text-sm text-muted-foreground">
           방금 선택한 AI 시안은 분위기 참고용입니다. 캐릭터 그림체, 레터링
           스타일, 세부 디자인을 정확히 반영하려면 참고 사진을 함께 등록해

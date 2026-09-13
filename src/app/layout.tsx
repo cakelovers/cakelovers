@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Gowun_Dodum, Gowun_Batang, Geist_Mono, Alex_Brush } from "next/font/google";
+import { Gowun_Dodum, Geist_Mono, Alex_Brush } from "next/font/google";
 import "./globals.css";
 
 // `variable` must be exactly "--font-sans" to match globals.css's
@@ -36,20 +36,6 @@ const alexBrush = Alex_Brush({
   subsets: ["latin"],
 });
 
-// Serif display face for real headings (page/section titles) — the
-// editorial, Korean-boutique counterpart to Gowun Dodum's body-copy
-// sans, both from the same Gowun family so the pairing reads as one
-// deliberate system rather than two unrelated fonts. Wired to
-// `--font-heading` (see globals.css), which every h1/h2 heading across
-// the landing page, order flow, and admin dashboard uses via
-// `font-heading` — field-group labels and body text stay on Gowun
-// Dodum.
-const gowunBatang = Gowun_Batang({
-  variable: "--font-heading-serif",
-  weight: "700",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
   title: "Cake Lovers",
   description: "Custom cake ordering for local cake shops.",
@@ -63,7 +49,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${gowunDodum.variable} ${geistMono.variable} ${alexBrush.variable} ${gowunBatang.variable} antialiased`}
+        className={`${gowunDodum.variable} ${geistMono.variable} ${alexBrush.variable} antialiased`}
       >
         {children}
       </body>

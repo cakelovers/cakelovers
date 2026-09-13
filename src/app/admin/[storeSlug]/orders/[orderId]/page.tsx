@@ -176,7 +176,7 @@ export default async function OrderDetailPage({
 
       <Card>
         <CardContent className="flex flex-col gap-2">
-          <h2 className="font-heading font-medium">AI 생성 디자인 (고객 승인 완료)</h2>
+          <h2 className="font-medium">AI 생성 디자인 (고객 승인 완료)</h2>
           {previewSigned?.signedUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL
             <img
@@ -191,7 +191,7 @@ export default async function OrderDetailPage({
       </Card>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-heading font-medium">참고 사진 (제작 참고용)</h2>
+        <h2 className="font-medium">참고 사진 (제작 참고용)</h2>
         <p className="text-xs text-muted-foreground">
           디자인이 아니라 제작을 돕기 위한 참고 자료입니다.
         </p>
@@ -217,21 +217,21 @@ export default async function OrderDetailPage({
 
       <Card>
         <CardContent className="flex flex-col gap-1">
-          <h2 className="font-heading font-medium">설명</h2>
+          <h2 className="font-medium">설명</h2>
           <p className="text-sm">{order.description}</p>
         </CardContent>
       </Card>
 
       {order.customer_note && (
         <section className="flex flex-col gap-1">
-          <h2 className="font-heading font-medium">고객 메모</h2>
+          <h2 className="font-medium">고객 메모</h2>
           <p className="text-sm">{order.customer_note}</p>
         </section>
       )}
 
       {(order.specification_label || order.flavor_package_label) && (
         <section className="flex flex-col gap-1">
-          <h2 className="font-heading font-medium">케이크 구성</h2>
+          <h2 className="font-medium">케이크 구성</h2>
           <p className="text-sm">
             {[order.specification_label, order.flavor_package_label].filter(Boolean).join(" · ")}
           </p>
@@ -240,14 +240,14 @@ export default async function OrderDetailPage({
 
       {order.cake_message && (
         <section className="flex flex-col gap-1">
-          <h2 className="font-heading font-medium">케이크 메시지</h2>
+          <h2 className="font-medium">케이크 메시지</h2>
           <p className="text-sm">{order.cake_message}</p>
         </section>
       )}
 
       <Card>
         <CardContent className="flex flex-col gap-1">
-          <h2 className="font-heading font-medium">고객</h2>
+          <h2 className="font-medium">고객</h2>
           <p className="text-sm">{customer?.name ?? "알 수 없음"}</p>
           {customer?.phone && <p className="text-sm text-muted-foreground">{customer.phone}</p>}
           {customer?.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
@@ -256,7 +256,7 @@ export default async function OrderDetailPage({
 
       <Card>
         <CardContent className="flex flex-col gap-1">
-          <h2 className="font-heading font-medium">픽업</h2>
+          <h2 className="font-medium">픽업</h2>
           <p className="text-sm">
             {order.pickup_date} {order.pickup_time}
           </p>

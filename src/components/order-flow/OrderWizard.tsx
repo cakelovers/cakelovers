@@ -11,6 +11,7 @@ import { useCanvasFlip } from "./useCanvasFlip"
 import { useKeyboardInset } from "./useKeyboardInset"
 import { WIZARD_STEPS, DIRECT_WIZARD_STEPS, type WizardData } from "./types"
 import { CakeConfigurationStep } from "./steps/CakeConfigurationStep"
+import { BrowseStep } from "./steps/BrowseStep"
 import { AiPreviewStep } from "./steps/AiPreviewStep"
 import { ReferenceImagesStep } from "./steps/ReferenceImagesStep"
 import { PickupStep } from "./steps/PickupStep"
@@ -407,15 +408,26 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
           </div>
         )}
 
-        {/* Placeholder — BrowseStep (catalog fetch, grid, selection)
-            lands in a follow-up change. Until then this keeps Direct
-            Mode's screen real and navigable rather than blank; "다음"
-            stays correctly disabled since no design is selected here. */}
         {currentStep.id === "browse" && (
-          <div className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold">디자인 선택</h2>
-            <p className="text-sm text-muted-foreground">인기 디자인을 불러오는 중입니다.</p>
-          </div>
+          <BrowseStep
+            storeSlug={storeSlug}
+            onSelect={({ id, label, imageUrl }) => {
+              // The same WizardData fields a Custom Mode generation
+              // populates — everything downstream (Pickup, Review,
+              // submission) reads these generically, unaware a catalog
+              // selection produced them rather than AI generation.
+              // "인기 디자인 선택 · " alone already clears
+              // MIN_DESCRIPTION_LENGTH (10), so this satisfies the
+              // description requirement regardless of label length.
+              updateData({
+                catalogDesignId: id,
+                selectedPreviewImage: imageUrl,
+                selectedPreviewPrompt: label,
+                description: `인기 디자인 선택 · ${label}`,
+              })
+              goNext()
+            }}
+          />
         )}
 
         {mode !== "unset" && currentStep.id === "cakeConfig" && (

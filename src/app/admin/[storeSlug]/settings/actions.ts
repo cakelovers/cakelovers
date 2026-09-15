@@ -365,3 +365,189 @@ export async function moveCakeOption(
   revalidatePath(`/admin/${storeSlug}/settings`)
   return { success: true }
 }
+
+// ---------------------------------------------------------------------------
+// Catalog designs (Direct Mode)
+// ---------------------------------------------------------------------------
+// Same shape and conventions as the Cake Configuration actions above —
+// disabling (is_enabled = false) is the only supported removal path, so
+// an id already referenced by a past order keeps resolving.
+// price_adjustment_krw is informational display only here too; no code
+// path sums it or writes it as an order's authoritative charge — the
+// owner's manually-entered quote remains that, same as every custom
+// order (see .../orders/route.ts).
+//
+// The photo itself is uploaded separately, first, via
+// .../catalog-designs/upload — this action only ever receives the
+// resulting storage path string, matching the same
+// upload-then-reference pattern already used for reference photos and
+// AI previews (see ReviewStep.tsx).
+
+const MAX_CATALOG_DESIGN_LABEL_LENGTH = MAX_CAKE_OPTION_LABEL_LENGTH
+
+interface AddCatalogDesignResult extends ActionResult {
+  id?: string
+}
+
+export async function addCatalogDesign(
+  storeSlug: string,
+  label: string,
+  priceAdjustmentKrw: number | string | null,
+  imageStoragePath: string
+): Promise<AddCatalogDesignResult> {
+  const membership = await getStoreMembership(storeSlug)
+  if (!membership) return { error: "권한이 없습니다." }
+
+  const trimmed = label.trim()
+  if (!trimmed) return { error: "디자인 이름을 입력해 주세요." }
+  if (trimmed.length > MAX_CATALOG_DESIGN_LABEL_LENGTH) {
+    return { error: `디자인 이름은 ${MAX_CATALOG_DESIGN_LABEL_LENGTH}자 이하로 입력해 주세요.` }
+  }
+  if (!imageStoragePath) {
+    return { error: "사진을 먼저 업로드해 주세요." }
+  }
+
+  const { value: price, error: priceError } = parsePriceAdjustment(priceAdjustmentKrw)
+  if (priceError) return { error: priceError }
+
+  const supabase = await createClient()
+
+  const { data: existing } = await supabase
+    .from("store_catalog_designs")
+    .select("sort_order")
+    .eq("store_id", membership.storeId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle<{ sort_order: number }>()
+
+  const { data: inserted, error } = await supabase
+    .from("store_catalog_designs")
+    .insert({
+      store_id: membership.storeId,
+      label: trimmed,
+      image_storage_path: imageStoragePath,
+      price_adjustment_krw: price,
+      sort_order: (existing?.sort_order ?? -1) + 1,
+    })
+    .select("id")
+    .single<{ id: string }>()
+
+  if (error || !inserted) {
+    console.error("[admin] catalog design insert failed", error)
+    return { error: "디자인을 추가하지 못했습니다. 다시 시도해 주세요." }
+  }
+
+  revalidatePath(`/admin/${storeSlug}/settings`)
+  return { success: true, id: inserted.id }
+}
+
+export async function updateCatalogDesign(
+  storeSlug: string,
+  designId: string,
+  label: string,
+  priceAdjustmentKrw: number | string | null
+): Promise<ActionResult> {
+  const membership = await getStoreMembership(storeSlug)
+  if (!membership) return { error: "권한이 없습니다." }
+
+  const trimmed = label.trim()
+  if (!trimmed) return { error: "이름을 입력해 주세요." }
+  if (trimmed.length > MAX_CATALOG_DESIGN_LABEL_LENGTH) {
+    return { error: `이름은 ${MAX_CATALOG_DESIGN_LABEL_LENGTH}자 이하로 입력해 주세요.` }
+  }
+
+  const { value: price, error: priceError } = parsePriceAdjustment(priceAdjustmentKrw)
+  if (priceError) return { error: priceError }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("store_catalog_designs")
+    .update({ label: trimmed, price_adjustment_krw: price })
+    .eq("id", designId)
+    .eq("store_id", membership.storeId)
+
+  if (error) {
+    console.error("[admin] catalog design update failed", error)
+    return { error: "디자인을 수정하지 못했습니다. 다시 시도해 주세요." }
+  }
+
+  revalidatePath(`/admin/${storeSlug}/settings`)
+  return { success: true }
+}
+
+export async function setCatalogDesignEnabled(
+  storeSlug: string,
+  designId: string,
+  isEnabled: boolean
+): Promise<ActionResult> {
+  const membership = await getStoreMembership(storeSlug)
+  if (!membership) return { error: "권한이 없습니다." }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("store_catalog_designs")
+    .update({ is_enabled: isEnabled })
+    .eq("id", designId)
+    .eq("store_id", membership.storeId)
+
+  if (error) {
+    console.error("[admin] catalog design enable toggle failed", error)
+    return { error: "디자인 상태를 변경하지 못했습니다. 다시 시도해 주세요." }
+  }
+
+  revalidatePath(`/admin/${storeSlug}/settings`)
+  return { success: true }
+}
+
+// Swaps sort_order with the immediate neighbor. A no-op (not an error)
+// when already at that end of the list.
+export async function moveCatalogDesign(
+  storeSlug: string,
+  designId: string,
+  direction: "up" | "down"
+): Promise<ActionResult> {
+  const membership = await getStoreMembership(storeSlug)
+  if (!membership) return { error: "권한이 없습니다." }
+
+  const supabase = await createClient()
+  const { data: rows, error: fetchError } = await supabase
+    .from("store_catalog_designs")
+    .select("id, sort_order")
+    .eq("store_id", membership.storeId)
+    .order("sort_order")
+    .returns<{ id: string; sort_order: number }[]>()
+
+  if (fetchError || !rows) {
+    return { error: "디자인 목록을 불러오지 못했습니다. 다시 시도해 주세요." }
+  }
+
+  const index = rows.findIndex((row) => row.id === designId)
+  const swapIndex = direction === "up" ? index - 1 : index + 1
+  if (index === -1 || swapIndex < 0 || swapIndex >= rows.length) {
+    return { success: true }
+  }
+
+  const current = rows[index]
+  const swapWith = rows[swapIndex]
+
+  const [{ error: errorA }, { error: errorB }] = await Promise.all([
+    supabase
+      .from("store_catalog_designs")
+      .update({ sort_order: swapWith.sort_order })
+      .eq("id", current.id)
+      .eq("store_id", membership.storeId),
+    supabase
+      .from("store_catalog_designs")
+      .update({ sort_order: current.sort_order })
+      .eq("id", swapWith.id)
+      .eq("store_id", membership.storeId),
+  ])
+
+  if (errorA || errorB) {
+    console.error("[admin] catalog design reorder failed", errorA || errorB)
+    return { error: "순서를 변경하지 못했습니다. 다시 시도해 주세요." }
+  }
+
+  revalidatePath(`/admin/${storeSlug}/settings`)
+  return { success: true }
+}

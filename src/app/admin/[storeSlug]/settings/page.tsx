@@ -4,9 +4,11 @@ import { getStoreMembership } from "@/lib/admin/get-store-membership"
 import { getPaymentSettings } from "@/lib/admin/get-payment-settings"
 import { getPickupSettings } from "@/lib/admin/get-pickup-settings"
 import { getCakeOptions } from "@/lib/admin/get-cake-options"
+import { getCatalogDesigns } from "@/lib/admin/get-catalog-designs"
 import { PaymentSettingsForm } from "@/components/admin/PaymentSettingsForm"
 import { PickupSettingsForm } from "@/components/admin/PickupSettingsForm"
 import { CakeOptionsForm } from "@/components/admin/CakeOptionsForm"
+import { CatalogDesignsForm } from "@/components/admin/CatalogDesignsForm"
 
 export default async function StoreSettingsPage({
   params,
@@ -17,10 +19,11 @@ export default async function StoreSettingsPage({
   const membership = await getStoreMembership(storeSlug)
   if (!membership) redirect("/login")
 
-  const [settings, pickupSettings, cakeOptions] = await Promise.all([
+  const [settings, pickupSettings, cakeOptions, catalogDesigns] = await Promise.all([
     getPaymentSettings(membership.storeId),
     getPickupSettings(membership.storeId),
     getCakeOptions(membership.storeId),
+    getCatalogDesigns(membership.storeId),
   ])
 
   return (
@@ -65,6 +68,18 @@ export default async function StoreSettingsPage({
           </p>
         </div>
         <CakeOptionsForm storeSlug={storeSlug} initial={cakeOptions} />
+      </div>
+
+      <div className="flex flex-col gap-4 border-t pt-8">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-lg font-semibold">인기 디자인 (직접 주문)</h1>
+          <p className="text-sm text-muted-foreground">
+            고객이 AI 생성 없이 바로 선택해 주문할 수 있는 디자인입니다. &ldquo;직접
+            만들어보기&rdquo;와 마찬가지로, 주문이 들어오면 사장님이 직접 견적을 확인하고
+            결제 안내를 보내는 절차는 동일합니다.
+          </p>
+        </div>
+        <CatalogDesignsForm storeSlug={storeSlug} initial={catalogDesigns} />
       </div>
     </div>
   )

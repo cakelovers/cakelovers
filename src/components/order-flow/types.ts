@@ -61,8 +61,15 @@ export interface WizardData {
   // own timestamp on `orders.privacy_consent_given_at`; this flag only
   // gates the client-side submit button.
   privacyConsentAccepted: boolean
+  // Set only when the design came from Direct Mode's catalog rather
+  // than AI generation — the server re-resolves the image/label from
+  // this id itself (never trusts selectedPreviewImage/Prompt for a
+  // catalog order); see .../orders/route.ts. Null for a Custom Mode
+  // order.
+  catalogDesignId: string | null
 }
 
+// Custom Mode: Describe -> Generate -> Select Design -> Pickup -> Review.
 export const WIZARD_STEPS = [
   { id: "cakeConfig", label: "케이크 구성" },
   { id: "aiPreview", label: "AI 시안" },
@@ -71,4 +78,16 @@ export const WIZARD_STEPS = [
   { id: "review", label: "검토 및 제출" },
 ] as const
 
-export type WizardStepId = (typeof WIZARD_STEPS)[number]["id"]
+// Direct Mode: Browse -> Select Design -> Pickup -> Review. Same
+// pickup/review steps as Custom Mode (identical components — see
+// OrderWizard.tsx's step switch), just entered via a catalog selection
+// instead of AI generation.
+export const DIRECT_WIZARD_STEPS = [
+  { id: "browse", label: "디자인 선택" },
+  { id: "pickup", label: "픽업정보" },
+  { id: "review", label: "검토 및 제출" },
+] as const
+
+export type WizardStepId =
+  | (typeof WIZARD_STEPS)[number]["id"]
+  | (typeof DIRECT_WIZARD_STEPS)[number]["id"]

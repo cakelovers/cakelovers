@@ -9,7 +9,7 @@ import { WizardProgress } from "./WizardProgress"
 import { OrderCanvas, OrderCanvasText } from "./OrderCanvas"
 import { useCanvasFlip } from "./useCanvasFlip"
 import { useKeyboardInset } from "./useKeyboardInset"
-import { WIZARD_STEPS, type WizardData } from "./types"
+import { WIZARD_STEPS, DIRECT_WIZARD_STEPS, type WizardData } from "./types"
 import { CakeConfigurationStep } from "./steps/CakeConfigurationStep"
 import { AiPreviewStep } from "./steps/AiPreviewStep"
 import { ReferenceImagesStep } from "./steps/ReferenceImagesStep"
@@ -36,6 +36,7 @@ const INITIAL_DATA: WizardData = {
   phone: "",
   customerNote: "",
   privacyConsentAccepted: false,
+  catalogDesignId: null,
 }
 
 interface OrderWizardProps {
@@ -53,6 +54,13 @@ const GENERATION_TIMEOUT_MS = 25000
 // .../cake-options/route.ts, and .../orders/route.ts for the
 // corresponding server-side pieces.
 export function OrderWizard({ storeSlug }: OrderWizardProps) {
+  // Which pipeline is active — Custom Mode and Direct Mode differ only
+  // in how a design is selected (see DIRECT_WIZARD_STEPS in types.ts);
+  // everything from the selected design onward (Pickup, Review, and the
+  // order pipeline itself) is identical between the two. "unset" is the
+  // Entry screen — the customer's very first frame, choosing between
+  // the two.
+  const [mode, setMode] = useState<"unset" | "custom" | "direct">("unset")
   const [stepIndex, setStepIndex] = useState(0)
   // The furthest step reached so far — lets the progress bar allow
   // jumping back to any visited step while still blocking a jump ahead
@@ -120,9 +128,9 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
     data.customerNote,
   ])
 
-  const currentStep = WIZARD_STEPS[stepIndex]
-  const isFirstStep = stepIndex === 0
-  const isLastStep = stepIndex === WIZARD_STEPS.length - 1
+  const activeSteps = mode === "direct" ? DIRECT_WIZARD_STEPS : WIZARD_STEPS
+  const currentStep = activeSteps[stepIndex]
+  const isLastStep = stepIndex === activeSteps.length - 1
   const canAdvance = canLeaveStep(currentStep.id, data)
   const blockedReason = canAdvance ? null : stepBlockedReason(currentStep.id, data)
 
@@ -199,18 +207,45 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
   }, [currentStep.id])
 
   function goNext() {
-    setStepIndex((i) => Math.min(i + 1, WIZARD_STEPS.length - 1))
+    setStepIndex((i) => Math.min(i + 1, activeSteps.length - 1))
   }
 
+  // From the first step of either pipeline, "이전" returns to Entry
+  // rather than being a no-op — the ribbon is one object in three
+  // states, not a dead end at either boundary.
   function goBack() {
+    if (stepIndex === 0) {
+      setMode("unset")
+      return
+    }
     setStepIndex((i) => Math.max(i - 1, 0))
   }
 
-  // Moves focus to the main content region on every step change, so
-  // keyboard and screen-reader users land on the new step's content
-  // instead of staying wherever focus happened to be (often a button
-  // that may now be in a different state, or gone). Skipped on the
-  // very first render — that's app boot, not a step transition.
+  // Switching modes clears the *other* mode's design-selection fields —
+  // selectedPreviewImage/Prompt is the one field both pipelines write
+  // to, so a stale Custom generation must not linger into a Direct
+  // session, or vice versa.
+  function chooseCustomMode() {
+    updateData({ catalogDesignId: null })
+    setMode("custom")
+  }
+
+  function chooseDirectMode() {
+    updateData({
+      currentPreviewImage: null,
+      currentPreviewPrompt: null,
+      selectedPreviewImage: null,
+      selectedPreviewPrompt: null,
+    })
+    setMode("direct")
+  }
+
+  // Moves focus to the main content region on every step change (and on
+  // leaving/returning to Entry, which is a content change without a
+  // stepIndex change), so keyboard and screen-reader users land on the
+  // new content instead of staying wherever focus happened to be (often
+  // a button that may now be in a different state, or gone). Skipped on
+  // the very first render — that's app boot, not a transition.
   const mainRef = useRef<HTMLElement>(null)
   const isFirstRenderRef = useRef(true)
   useEffect(() => {
@@ -219,13 +254,13 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
       return
     }
     mainRef.current?.focus()
-  }, [stepIndex])
+  }, [stepIndex, mode])
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background">
       <header className="sticky top-0 z-10 border-b bg-background px-4 pt-4 pb-3">
         <p className="mb-2 text-xs text-muted-foreground">{storeSlug}</p>
-        {showRestoredNotice && (
+        {showRestoredNotice && mode !== "unset" && (
           <div className="mb-2 flex items-center justify-between gap-2 rounded-md bg-muted/60 px-2.5 py-1.5 text-xs text-muted-foreground">
             <span>이전에 작성하신 내용을 불러왔어요.</span>
             <button
@@ -237,23 +272,40 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
             </button>
           </div>
         )}
-        <WizardProgress
-          steps={WIZARD_STEPS}
-          currentIndex={stepIndex}
-          maxReachableIndex={furthestIndex}
-          onStepClick={setStepIndex}
-        />
+        {/* No progress rail on Entry — nothing to count yet, since no
+            path has been chosen. */}
+        {mode !== "unset" && (
+          <WizardProgress
+            steps={activeSteps}
+            currentIndex={stepIndex}
+            maxReachableIndex={furthestIndex}
+            onStepClick={setStepIndex}
+          />
+        )}
       </header>
 
       <main ref={mainRef} tabIndex={-1} className="flex-1 overflow-y-auto scroll-pb-28 px-4 py-6 pb-28">
-        {/* Persistent canvas — a stable sibling across every step, never
-            unmounted by the step switch below. Content and size vary by
-            step; presence doesn't. scroll-mt so a focused-input auto-
-            scroll (or a native "scroll into view") doesn't tuck it under
-            the sticky header above. */}
+        {/* Persistent canvas — a stable sibling across every step (and
+            Entry), never unmounted by the mode/step switches below.
+            Content and size vary; presence doesn't. scroll-mt so a
+            focused-input auto-scroll (or a native "scroll into view")
+            doesn't tuck it under the sticky header above. */}
         <div className="mb-6 flex scroll-mt-24 justify-center">
-          <OrderCanvas ref={canvasRef} compact={currentStep.id === "pickup"}>
-            {currentStep.id === "cakeConfig" && (
+          <OrderCanvas ref={canvasRef} compact={mode !== "unset" && currentStep.id === "pickup"}>
+            {mode === "unset" && (
+              // Entry's ribbon — decorative only; the real choice is the
+              // two cards below, not this image, so it carries no
+              // information a screen reader needs.
+              // eslint-disable-next-line @next/next/no-img-element -- static public asset, deliberately not next/image (see ENT-2)
+              <img
+                src="/entry-ribbon.jpg"
+                alt=""
+                aria-hidden="true"
+                className="h-full w-full object-cover object-center"
+              />
+            )}
+
+            {mode !== "unset" && currentStep.id === "cakeConfig" && (
               // aria-hidden: purely decorative — the same text is
               // already accessible (and editable) via the real,
               // properly-labeled textarea below. Without this, a screen
@@ -303,7 +355,8 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
               </div>
             )}
 
-            {(currentStep.id === "references" ||
+            {(currentStep.id === "browse" ||
+              currentStep.id === "references" ||
               currentStep.id === "pickup" ||
               currentStep.id === "review") &&
               (data.selectedPreviewImage && data.selectedPreviewImage !== brokenSelectedSrc ? (
@@ -326,7 +379,46 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
           </OrderCanvas>
         </div>
 
-        {currentStep.id === "cakeConfig" && (
+        {mode === "unset" && (
+          <div className="flex flex-col gap-3">
+            <p className="text-center text-sm font-medium text-foreground">
+              시작 방법을 선택해주세요
+            </p>
+            <button
+              type="button"
+              onClick={chooseCustomMode}
+              className="w-full rounded-lg border bg-muted/40 px-4 py-4 text-left active:scale-[0.98] active:border-primary active:bg-primary/5"
+            >
+              <p className="text-base font-semibold text-foreground">직접 만들어보기</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                원하는 모습을 설명하면 AI가 시안을 그려드려요
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={chooseDirectMode}
+              className="w-full rounded-lg border bg-muted/40 px-4 py-4 text-left active:scale-[0.98] active:border-primary active:bg-primary/5"
+            >
+              <p className="text-base font-semibold text-foreground">인기 디자인 주문하기</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                이미 인기 있는 디자인 중에서 골라보세요
+              </p>
+            </button>
+          </div>
+        )}
+
+        {/* Placeholder — BrowseStep (catalog fetch, grid, selection)
+            lands in a follow-up change. Until then this keeps Direct
+            Mode's screen real and navigable rather than blank; "다음"
+            stays correctly disabled since no design is selected here. */}
+        {currentStep.id === "browse" && (
+          <div className="flex flex-col gap-2">
+            <h2 className="text-lg font-semibold">디자인 선택</h2>
+            <p className="text-sm text-muted-foreground">인기 디자인을 불러오는 중입니다.</p>
+          </div>
+        )}
+
+        {mode !== "unset" && currentStep.id === "cakeConfig" && (
           <CakeConfigurationStep storeSlug={storeSlug} data={data} onChange={updateData} />
         )}
 
@@ -366,32 +458,37 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
         )}
       </main>
 
-      <footer
-        className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-md border-t bg-background px-4 pt-3"
-        style={{
-          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
-          // Pinned to the visible bottom edge, not the layout viewport's —
-          // see useKeyboardInset.ts. transform, not `bottom`, so this
-          // stays compositor-only and never fights layout.
-          transform: keyboardInset > 0 ? `translateY(-${keyboardInset}px)` : undefined,
-        }}
-      >
-        {!isLastStep && blockedReason && (
-          <p className="mb-2 text-center text-xs text-muted-foreground">{blockedReason}</p>
-        )}
-        <div className="flex gap-2">
-          {!isFirstStep && (
+      {/* No footer on Entry — a card tap is the only action, and it
+          commits immediately (see the two buttons above). */}
+      {mode !== "unset" && (
+        <footer
+          className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-md border-t bg-background px-4 pt-3"
+          style={{
+            paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+            // Pinned to the visible bottom edge, not the layout viewport's —
+            // see useKeyboardInset.ts. transform, not `bottom`, so this
+            // stays compositor-only and never fights layout.
+            transform: keyboardInset > 0 ? `translateY(-${keyboardInset}px)` : undefined,
+          }}
+        >
+          {!isLastStep && blockedReason && (
+            <p className="mb-2 text-center text-xs text-muted-foreground">{blockedReason}</p>
+          )}
+          <div className="flex gap-2">
+            {/* Always shown once a path is chosen — from the first step,
+                "이전" returns to Entry rather than being hidden (see
+                goBack above). */}
             <Button variant="outline" className="flex-1" onClick={goBack}>
               이전
             </Button>
-          )}
-          {!isLastStep && (
-            <Button className="flex-1" onClick={goNext} disabled={!canAdvance}>
-              다음
-            </Button>
-          )}
-        </div>
-      </footer>
+            {!isLastStep && (
+              <Button className="flex-1" onClick={goNext} disabled={!canAdvance}>
+                다음
+              </Button>
+            )}
+          </div>
+        </footer>
+      )}
     </div>
   )
 }

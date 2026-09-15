@@ -24,6 +24,8 @@ export function canLeaveStep(stepId: WizardStepId, data: WizardData): boolean {
     }
     case "aiPreview":
       return Boolean(data.selectedPreviewImage && data.selectedPreviewPrompt)
+    case "browse":
+      return Boolean(data.selectedPreviewImage && data.catalogDesignId)
     case "pickup":
       return Boolean(data.pickupDate && data.pickupTime)
     default:
@@ -46,6 +48,7 @@ export function stepBlockedReason(stepId: WizardStepId, data: WizardData): strin
       return `케이크에 대한 설명을 ${MIN_DESCRIPTION_LENGTH}자 이상 작성해 주세요.`
     }
     case "aiPreview":
+    case "browse":
       return "계속하려면 디자인을 선택해 주세요."
     case "pickup":
       return "계속하려면 픽업 날짜와 시간을 선택해 주세요."

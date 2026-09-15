@@ -37,23 +37,30 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       // authorized against it.
       await ensureAnonymousSession()
 
-      // Upload the selected preview separately, first. Sending its
-      // ~1.5-2.5MB base64 payload in the same request as the final
-      // order (plus any reference photos) risks exceeding Vercel's
-      // 4.5MB serverless function body limit
-      // (FUNCTION_PAYLOAD_TOO_LARGE) — splitting it out keeps every
-      // request comfortably small regardless of how many reference
-      // photos are attached.
-      const previewRes = await fetch(`/api/stores/${storeSlug}/ai-preview/save`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, previewImage: data.selectedPreviewImage }),
-      })
-      const previewBody = await previewRes.json()
+      // A catalog design (Direct Mode) is a store-owned photo the
+      // server already has and re-resolves itself from catalogDesignId
+      // (see .../orders/route.ts) — nothing to upload here, and
+      // uploading it would be wrong besides: it isn't a base64 payload
+      // this endpoint can decode, and it isn't per-order data to begin
+      // with. Only a Custom Mode (AI-generated) selection needs this
+      // separate upload — splitting it out of the final /orders request
+      // keeps that request comfortably under Vercel's 4.5MB serverless
+      // body limit (FUNCTION_PAYLOAD_TOO_LARGE) regardless of how many
+      // reference photos are attached.
+      let previewStoragePath: string | null = null
+      if (!data.catalogDesignId) {
+        const previewRes = await fetch(`/api/stores/${storeSlug}/ai-preview/save`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId, previewImage: data.selectedPreviewImage }),
+        })
+        const previewBody = await previewRes.json()
 
-      if (!previewRes.ok) {
-        setSubmitError(previewBody?.error?.message ?? "선택한 디자인을 저장하지 못했습니다. 다시 시도해 주세요.")
-        return
+        if (!previewRes.ok) {
+          setSubmitError(previewBody?.error?.message ?? "선택한 디자인을 저장하지 못했습니다. 다시 시도해 주세요.")
+          return
+        }
+        previewStoragePath = previewBody.storagePath
       }
 
       // Upload each attached reference photo separately too, same reason
@@ -104,8 +111,14 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
       const formData = new FormData()
       formData.set("orderId", orderId)
       formData.set("description", data.description)
-      formData.set("previewStoragePath", previewBody.storagePath)
-      formData.set("previewPrompt", data.selectedPreviewPrompt ?? "")
+      if (data.catalogDesignId) {
+        // The server resolves the image/label itself from this id —
+        // see the "Resolve catalog design" block in orders/route.ts.
+        formData.set("catalogDesignId", data.catalogDesignId)
+      } else if (previewStoragePath) {
+        formData.set("previewStoragePath", previewStoragePath)
+        formData.set("previewPrompt", data.selectedPreviewPrompt ?? "")
+      }
       if (data.specificationOptionId) formData.set("specificationOptionId", data.specificationOptionId)
       if (data.flavorPackageOptionId) formData.set("flavorPackageOptionId", data.flavorPackageOptionId)
       formData.set("cakeMessageChoice", data.cakeMessageChoice ?? "")

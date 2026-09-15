@@ -6,6 +6,7 @@ import { ensureAnonymousSession } from "@/lib/supabase/ensure-session"
 import { canLeaveStep, stepBlockedReason } from "@/lib/validation/wizard-steps"
 import { loadDraft, saveDraft } from "@/lib/wizard-persistence"
 import { WizardProgress } from "./WizardProgress"
+import { OrderCanvas, OrderCanvasText } from "./OrderCanvas"
 import { WIZARD_STEPS, type WizardData } from "./types"
 import { CakeConfigurationStep } from "./steps/CakeConfigurationStep"
 import { AiPreviewStep } from "./steps/AiPreviewStep"
@@ -121,6 +122,47 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
     setData((prev) => ({ ...prev, ...patch }))
   }
 
+  // AI preview generation state lives here, not inside AiPreviewStep,
+  // because both the persistent canvas (image/shimmer/error display)
+  // and the step's rail (regenerate/proceed buttons, error text) need
+  // it, and the canvas is a sibling of the step content now rather
+  // than something the step renders itself.
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generationError, setGenerationError] = useState<string | null>(null)
+
+  async function handleGenerate() {
+    setIsGenerating(true)
+    setGenerationError(null)
+    try {
+      const res = await fetch(`/api/stores/${storeSlug}/ai-preview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description: data.description }),
+      })
+      const body = await res.json()
+      if (!res.ok) {
+        setGenerationError(body?.error?.message ?? "미리보기를 생성하지 못했습니다. 다시 시도해 주세요.")
+        return
+      }
+      updateData({ currentPreviewImage: body.image, currentPreviewPrompt: body.prompt })
+    } catch {
+      setGenerationError("미리보기 서비스에 연결할 수 없습니다. 연결 상태를 확인하고 다시 시도해 주세요.")
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  useEffect(() => {
+    // Auto-generate the first candidate the moment the customer arrives
+    // at this step — mirrors the previous per-mount effect, but keyed on
+    // the step transition instead of a component mount, since the
+    // canvas no longer unmounts AiPreviewStep between visits.
+    if (currentStep.id === "aiPreview" && !data.currentPreviewImage) {
+      handleGenerate()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep.id])
+
   function goNext() {
     setStepIndex((i) => Math.min(i + 1, WIZARD_STEPS.length - 1))
   }
@@ -154,19 +196,75 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
       </header>
 
       <main className="flex-1 overflow-y-auto px-4 py-6 pb-28">
+        {/* Persistent canvas — a stable sibling across every step, never
+            unmounted by the step switch below. Content and size vary by
+            step; presence doesn't. */}
+        <div className="mb-6 flex justify-center">
+          <OrderCanvas compact={currentStep.id === "pickup"}>
+            {currentStep.id === "cakeConfig" && (
+              <OrderCanvasText>
+                {data.description ? (
+                  <p className="text-lg leading-relaxed text-foreground sm:text-xl">
+                    &ldquo;{data.description}&rdquo;
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">
+                    당신의 케이크가 여기에 나타납니다.
+                  </p>
+                )}
+              </OrderCanvasText>
+            )}
+
+            {currentStep.id === "aiPreview" &&
+              (isGenerating ? (
+                <OrderCanvasText>
+                  <p className="text-sm text-muted-foreground">미리보기 생성 중…</p>
+                </OrderCanvasText>
+              ) : data.currentPreviewImage ? (
+                // eslint-disable-next-line @next/next/no-img-element -- base64 data URL
+                <img
+                  src={data.currentPreviewImage}
+                  alt="AI가 생성한 케이크 미리보기"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <OrderCanvasText>
+                  <p className="text-sm text-muted-foreground">
+                    {generationError ?? "미리보기를 생성하지 못했어요 — 아래 버튼으로 다시 시도해 주세요"}
+                  </p>
+                </OrderCanvasText>
+              ))}
+
+            {(currentStep.id === "references" ||
+              currentStep.id === "pickup" ||
+              currentStep.id === "review") &&
+              (data.selectedPreviewImage ? (
+                // eslint-disable-next-line @next/next/no-img-element -- base64 data URL, not a static asset next/image can optimize
+                <img
+                  src={data.selectedPreviewImage}
+                  alt="선택한 케이크 디자인"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <OrderCanvasText>
+                  <p className="text-sm text-muted-foreground italic">선택한 디자인이 없습니다.</p>
+                </OrderCanvasText>
+              ))}
+          </OrderCanvas>
+        </div>
+
         {currentStep.id === "cakeConfig" && (
           <CakeConfigurationStep storeSlug={storeSlug} data={data} onChange={updateData} />
         )}
 
         {currentStep.id === "aiPreview" && (
           <AiPreviewStep
-            storeSlug={storeSlug}
             description={data.description}
             previewImage={data.currentPreviewImage}
             previewPrompt={data.currentPreviewPrompt}
-            onGenerated={({ image, prompt }) =>
-              updateData({ currentPreviewImage: image, currentPreviewPrompt: prompt })
-            }
+            isGenerating={isGenerating}
+            error={generationError}
+            onGenerate={handleGenerate}
             onSelect={({ image, prompt }) => {
               updateData({ selectedPreviewImage: image, selectedPreviewPrompt: prompt })
               goNext()

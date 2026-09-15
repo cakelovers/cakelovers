@@ -175,19 +175,13 @@ export function ReviewStep({ storeSlug, orderId, data, onChange }: ReviewStepPro
             <span className="font-medium">설명: </span>
             {data.description || "—"}
           </div>
-          <div className="flex items-center gap-2">
-            <span className="font-medium">선택한 디자인: </span>
-            {data.selectedPreviewImage ? (
-              // eslint-disable-next-line @next/next/no-img-element -- base64 data URL
-              <img
-                src={data.selectedPreviewImage}
-                alt="선택한 케이크 미리보기"
-                className="h-10 w-10 rounded-md object-cover"
-              />
-            ) : (
-              "선택하지 않음"
-            )}
-          </div>
+          {/* The design itself is shown by the persistent canvas above
+              this card — no need to duplicate it here as a thumbnail. */}
+          {!data.selectedPreviewImage && (
+            <div>
+              <span className="font-medium">선택한 디자인: </span>선택하지 않음
+            </div>
+          )}
           <div>
             <span className="font-medium">참고 사진: </span>
             {referenceCount} / 3

@@ -38,6 +38,13 @@ export function useCanvasFlip(ref: RefObject<HTMLDivElement | null>) {
 
     if (!changed || !first) return
 
+    // A viewer who has asked the OS for reduced motion gets the same
+    // end state instantly, with no transform animation — the resize
+    // still happens, it's just not animated.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return
+    }
+
     const dx = first.left - last.left
     const dy = first.top - last.top
     const sx = first.width / last.width

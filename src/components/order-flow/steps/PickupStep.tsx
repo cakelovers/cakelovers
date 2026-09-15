@@ -113,6 +113,7 @@ export function PickupStep({ storeSlug, pickupDate, pickupTime, onChange }: Pick
                 type="button"
                 disabled={!day.isOpen}
                 onClick={() => selectDate(day.date)}
+                aria-pressed={day.date === selectedDate}
                 className={cn(
                   "flex min-w-16 shrink-0 flex-col items-center rounded-lg border px-3 py-2 text-center",
                   day.date === selectedDate
@@ -136,6 +137,7 @@ export function PickupStep({ storeSlug, pickupDate, pickupTime, onChange }: Pick
                   key={slot}
                   type="button"
                   onClick={() => selectTime(slot)}
+                  aria-pressed={selectedDate === pickupDate && slot === pickupTime}
                   className={cn(
                     "rounded-md border px-2 py-1.5 text-sm",
                     selectedDate === pickupDate && slot === pickupTime

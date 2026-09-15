@@ -45,10 +45,17 @@ export const OrderCanvas = forwardRef<HTMLDivElement, OrderCanvasProps>(function
 
 // Centered, padded text treatment for non-image canvas content — used
 // for Describe's placeholder/echoed description and Preview's
-// loading/error copy.
-export function OrderCanvasText({ children }: { children: ReactNode }) {
+// loading/error copy. Accepts aria-* passthrough (e.g. aria-hidden for
+// Describe's echo, which duplicates the real textarea below it).
+export function OrderCanvasText({
+  children,
+  ...ariaProps
+}: { children: ReactNode } & React.AriaAttributes) {
   return (
-    <div className="flex h-full min-h-[300px] w-full flex-col items-center justify-center px-8 py-12 text-center sm:min-h-[380px]">
+    <div
+      className="flex h-full min-h-[300px] w-full flex-col items-center justify-center px-8 py-12 text-center sm:min-h-[380px]"
+      {...ariaProps}
+    >
       {children}
     </div>
   )

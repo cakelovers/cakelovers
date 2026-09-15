@@ -138,6 +138,7 @@ export function ReferenceImagesStep({ images, onChange }: ReferenceImagesStepPro
                 type="button"
                 disabled={isProcessing}
                 onClick={() => inputRefs.current[index]?.click()}
+                aria-label={`참고 사진 ${index + 1}`}
                 className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border border-dashed bg-muted/40 text-2xl text-muted-foreground disabled:opacity-60"
               >
                 {isProcessing ? (

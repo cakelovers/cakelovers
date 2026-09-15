@@ -145,6 +145,7 @@ export function CakeConfigurationStep({ storeSlug, data, onChange }: CakeConfigu
                 key={option.id}
                 type="button"
                 onClick={() => selectSpecification(option)}
+                aria-pressed={data.specificationOptionId === option.id}
                 className={cn(
                   "rounded-lg border px-3 py-1.5 text-sm",
                   data.specificationOptionId === option.id
@@ -169,6 +170,7 @@ export function CakeConfigurationStep({ storeSlug, data, onChange }: CakeConfigu
                 key={option.id}
                 type="button"
                 onClick={() => selectFlavorPackage(option)}
+                aria-pressed={data.flavorPackageOptionId === option.id}
                 className={cn(
                   "rounded-lg border px-3 py-1.5 text-sm",
                   data.flavorPackageOptionId === option.id

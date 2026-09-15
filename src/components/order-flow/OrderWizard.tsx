@@ -206,6 +206,21 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
     setStepIndex((i) => Math.max(i - 1, 0))
   }
 
+  // Moves focus to the main content region on every step change, so
+  // keyboard and screen-reader users land on the new step's content
+  // instead of staying wherever focus happened to be (often a button
+  // that may now be in a different state, or gone). Skipped on the
+  // very first render — that's app boot, not a step transition.
+  const mainRef = useRef<HTMLElement>(null)
+  const isFirstRenderRef = useRef(true)
+  useEffect(() => {
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false
+      return
+    }
+    mainRef.current?.focus()
+  }, [stepIndex])
+
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background">
       <header className="sticky top-0 z-10 border-b bg-background px-4 pt-4 pb-3">
@@ -230,7 +245,7 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
         />
       </header>
 
-      <main className="flex-1 overflow-y-auto scroll-pb-28 px-4 py-6 pb-28">
+      <main ref={mainRef} tabIndex={-1} className="flex-1 overflow-y-auto scroll-pb-28 px-4 py-6 pb-28">
         {/* Persistent canvas — a stable sibling across every step, never
             unmounted by the step switch below. Content and size vary by
             step; presence doesn't. scroll-mt so a focused-input auto-
@@ -239,7 +254,11 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
         <div className="mb-6 flex scroll-mt-24 justify-center">
           <OrderCanvas ref={canvasRef} compact={currentStep.id === "pickup"}>
             {currentStep.id === "cakeConfig" && (
-              <OrderCanvasText>
+              // aria-hidden: purely decorative — the same text is
+              // already accessible (and editable) via the real,
+              // properly-labeled textarea below. Without this, a screen
+              // reader would announce the description twice.
+              <OrderCanvasText aria-hidden="true">
                 {data.description ? (
                   <p className="text-lg leading-relaxed text-foreground sm:text-xl">
                     &ldquo;{data.description}&rdquo;
@@ -252,28 +271,37 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
               </OrderCanvasText>
             )}
 
-            {currentStep.id === "aiPreview" &&
-              (isGenerating ? (
-                <OrderCanvasText>
-                  <p className="text-sm text-muted-foreground">미리보기 생성 중…</p>
-                </OrderCanvasText>
-              ) : data.currentPreviewImage && data.currentPreviewImage !== brokenPreviewSrc ? (
-                // eslint-disable-next-line @next/next/no-img-element -- base64 data URL
-                <img
-                  src={data.currentPreviewImage}
-                  alt="AI가 생성한 케이크 미리보기"
-                  className="h-full w-full object-cover"
-                  onError={() => setBrokenPreviewSrc(data.currentPreviewImage)}
-                />
-              ) : (
-                <OrderCanvasText>
-                  <p className="text-sm text-muted-foreground">
-                    {brokenPreviewSrc !== null && data.currentPreviewImage === brokenPreviewSrc
-                      ? "미리보기를 표시하지 못했어요 — 아래 버튼으로 다시 시도해 주세요"
-                      : (generationError ?? "미리보기를 생성하지 못했어요 — 아래 버튼으로 다시 시도해 주세요")}
-                  </p>
-                </OrderCanvasText>
-              ))}
+            {currentStep.id === "aiPreview" && (
+              // A single persistent live region wrapping all three
+              // states (generating / image / error) — aria-live only
+              // reliably announces changes to a node that stays in the
+              // DOM as its content changes, not a node that gets
+              // unmounted and replaced by a different one each time.
+              // display:contents keeps it out of the layout.
+              <div className="contents" aria-live="polite" aria-atomic="true">
+                {isGenerating ? (
+                  <OrderCanvasText>
+                    <p className="text-sm text-muted-foreground">미리보기 생성 중…</p>
+                  </OrderCanvasText>
+                ) : data.currentPreviewImage && data.currentPreviewImage !== brokenPreviewSrc ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- base64 data URL
+                  <img
+                    src={data.currentPreviewImage}
+                    alt="AI가 생성한 케이크 미리보기"
+                    className="h-full w-full object-cover"
+                    onError={() => setBrokenPreviewSrc(data.currentPreviewImage)}
+                  />
+                ) : (
+                  <OrderCanvasText>
+                    <p className="text-sm text-muted-foreground">
+                      {brokenPreviewSrc !== null && data.currentPreviewImage === brokenPreviewSrc
+                        ? "미리보기를 표시하지 못했어요 — 아래 버튼으로 다시 시도해 주세요"
+                        : (generationError ?? "미리보기를 생성하지 못했어요 — 아래 버튼으로 다시 시도해 주세요")}
+                    </p>
+                  </OrderCanvasText>
+                )}
+              </div>
+            )}
 
             {(currentStep.id === "references" ||
               currentStep.id === "pickup" ||

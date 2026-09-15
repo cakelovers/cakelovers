@@ -41,6 +41,12 @@ interface OrderWizardProps {
   storeSlug: string
 }
 
+// Generation can legitimately take a while, but must not hang
+// indefinitely — past this, the request is aborted and treated as a
+// failure so the canvas surfaces a retryable error instead of spinning
+// forever with no way out.
+const GENERATION_TIMEOUT_MS = 25000
+
 // Five-step flow: 케이크 구성 -> AI 시안 -> 참고사진 -> 픽업정보 -> 검토 및 제출.
 // See src/app/api/stores/[storeSlug]/ai-preview/route.ts,
 // .../cake-options/route.ts, and .../orders/route.ts for the
@@ -131,6 +137,13 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationError, setGenerationError] = useState<string | null>(null)
 
+  // Tracks a src that failed to decode (corrupted/truncated payload) so
+  // the canvas falls back to text instead of a broken-image icon —
+  // keyed by the src itself, so a *new* image (regenerated or newly
+  // selected) automatically gets a fresh attempt without extra effects.
+  const [brokenPreviewSrc, setBrokenPreviewSrc] = useState<string | null>(null)
+  const [brokenSelectedSrc, setBrokenSelectedSrc] = useState<string | null>(null)
+
   // Shared-element transition for the canvas's full <-> compact resize
   // (see useCanvasFlip.ts) — the same DOM node animates via transform
   // only, rather than the browser laying out a width/height change.
@@ -140,11 +153,14 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
   async function handleGenerate() {
     setIsGenerating(true)
     setGenerationError(null)
+    const timeoutController = new AbortController()
+    const timeoutId = setTimeout(() => timeoutController.abort(), GENERATION_TIMEOUT_MS)
     try {
       const res = await fetch(`/api/stores/${storeSlug}/ai-preview`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description: data.description }),
+        signal: timeoutController.signal,
       })
       const body = await res.json()
       if (!res.ok) {
@@ -152,9 +168,14 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
         return
       }
       updateData({ currentPreviewImage: body.image, currentPreviewPrompt: body.prompt })
-    } catch {
-      setGenerationError("미리보기 서비스에 연결할 수 없습니다. 연결 상태를 확인하고 다시 시도해 주세요.")
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setGenerationError("응답이 지연되고 있어요. 다시 시도해 주세요.")
+      } else {
+        setGenerationError("미리보기 서비스에 연결할 수 없습니다. 연결 상태를 확인하고 다시 시도해 주세요.")
+      }
     } finally {
+      clearTimeout(timeoutId)
       setIsGenerating(false)
     }
   }
@@ -227,17 +248,20 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
                 <OrderCanvasText>
                   <p className="text-sm text-muted-foreground">미리보기 생성 중…</p>
                 </OrderCanvasText>
-              ) : data.currentPreviewImage ? (
+              ) : data.currentPreviewImage && data.currentPreviewImage !== brokenPreviewSrc ? (
                 // eslint-disable-next-line @next/next/no-img-element -- base64 data URL
                 <img
                   src={data.currentPreviewImage}
                   alt="AI가 생성한 케이크 미리보기"
                   className="h-full w-full object-cover"
+                  onError={() => setBrokenPreviewSrc(data.currentPreviewImage)}
                 />
               ) : (
                 <OrderCanvasText>
                   <p className="text-sm text-muted-foreground">
-                    {generationError ?? "미리보기를 생성하지 못했어요 — 아래 버튼으로 다시 시도해 주세요"}
+                    {brokenPreviewSrc !== null && data.currentPreviewImage === brokenPreviewSrc
+                      ? "미리보기를 표시하지 못했어요 — 아래 버튼으로 다시 시도해 주세요"
+                      : (generationError ?? "미리보기를 생성하지 못했어요 — 아래 버튼으로 다시 시도해 주세요")}
                   </p>
                 </OrderCanvasText>
               ))}
@@ -245,16 +269,21 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
             {(currentStep.id === "references" ||
               currentStep.id === "pickup" ||
               currentStep.id === "review") &&
-              (data.selectedPreviewImage ? (
+              (data.selectedPreviewImage && data.selectedPreviewImage !== brokenSelectedSrc ? (
                 // eslint-disable-next-line @next/next/no-img-element -- base64 data URL, not a static asset next/image can optimize
                 <img
                   src={data.selectedPreviewImage}
                   alt="선택한 케이크 디자인"
                   className="h-full w-full object-cover"
+                  onError={() => setBrokenSelectedSrc(data.selectedPreviewImage)}
                 />
               ) : (
                 <OrderCanvasText>
-                  <p className="text-sm text-muted-foreground italic">선택한 디자인이 없습니다.</p>
+                  <p className="text-sm text-muted-foreground italic">
+                    {brokenSelectedSrc !== null && data.selectedPreviewImage === brokenSelectedSrc
+                      ? "디자인을 표시하지 못했어요."
+                      : "선택한 디자인이 없습니다."}
+                  </p>
                 </OrderCanvasText>
               ))}
           </OrderCanvas>

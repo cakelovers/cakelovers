@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ensureAnonymousSession } from "@/lib/supabase/ensure-session"
 import { canLeaveStep, stepBlockedReason } from "@/lib/validation/wizard-steps"
 import { loadDraft, saveDraft } from "@/lib/wizard-persistence"
 import { WizardProgress } from "./WizardProgress"
 import { OrderCanvas, OrderCanvasText } from "./OrderCanvas"
+import { useCanvasFlip } from "./useCanvasFlip"
 import { WIZARD_STEPS, type WizardData } from "./types"
 import { CakeConfigurationStep } from "./steps/CakeConfigurationStep"
 import { AiPreviewStep } from "./steps/AiPreviewStep"
@@ -130,6 +131,12 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationError, setGenerationError] = useState<string | null>(null)
 
+  // Shared-element transition for the canvas's full <-> compact resize
+  // (see useCanvasFlip.ts) — the same DOM node animates via transform
+  // only, rather than the browser laying out a width/height change.
+  const canvasRef = useRef<HTMLDivElement>(null)
+  useCanvasFlip(canvasRef)
+
   async function handleGenerate() {
     setIsGenerating(true)
     setGenerationError(null)
@@ -200,7 +207,7 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
             unmounted by the step switch below. Content and size vary by
             step; presence doesn't. */}
         <div className="mb-6 flex justify-center">
-          <OrderCanvas compact={currentStep.id === "pickup"}>
+          <OrderCanvas ref={canvasRef} compact={currentStep.id === "pickup"}>
             {currentStep.id === "cakeConfig" && (
               <OrderCanvasText>
                 {data.description ? (

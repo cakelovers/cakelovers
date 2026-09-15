@@ -82,6 +82,7 @@ export async function POST(
 
   const orderId = readField(formData, "orderId")
   const description = readField(formData, "description")?.trim() ?? ""
+  const catalogDesignId = readField(formData, "catalogDesignId")
   const previewStoragePath = readField(formData, "previewStoragePath")
   const previewPrompt = readField(formData, "previewPrompt")
   const pickupDate = readField(formData, "pickupDate")
@@ -101,15 +102,23 @@ export async function POST(
   if (description.length < MIN_DESCRIPTION_LENGTH || description.length > MAX_DESCRIPTION_LENGTH) {
     return errorResponse(400, "invalid_description", "올바른 디자인 설명을 입력해 주세요.")
   }
-  if (!previewStoragePath) {
-    return errorResponse(
-      400,
-      "missing_preview",
-      "주문을 제출하기 전에 AI 미리보기를 선택해 주세요."
-    )
+  if (catalogDesignId && !UUID_PATTERN.test(catalogDesignId)) {
+    return errorResponse(400, "invalid_catalog_design_id", "선택한 디자인 정보가 올바르지 않습니다.")
   }
-  if (!previewPrompt) {
-    return errorResponse(400, "missing_preview_prompt", "미리보기 프롬프트가 없습니다.")
+  // A catalog selection (Direct Mode) resolves its own image/prompt
+  // server-side below, from store_catalog_designs — these client-sent
+  // fields are only required for a Custom Mode (AI-generated) order.
+  if (!catalogDesignId) {
+    if (!previewStoragePath) {
+      return errorResponse(
+        400,
+        "missing_preview",
+        "주문을 제출하기 전에 AI 미리보기를 선택해 주세요."
+      )
+    }
+    if (!previewPrompt) {
+      return errorResponse(400, "missing_preview_prompt", "미리보기 프롬프트가 없습니다.")
+    }
   }
   if (!pickupDate || Number.isNaN(Date.parse(pickupDate))) {
     return errorResponse(400, "invalid_pickup_date", "올바른 픽업 날짜를 선택해 주세요.")
@@ -137,7 +146,10 @@ export async function POST(
       "제출하기 전에 개인정보처리방침에 동의해 주세요."
     )
   }
-  if (cakeMessageChoice !== "none" && cakeMessageChoice !== "custom") {
+  // A catalog selection (Direct Mode) never visits the step that
+  // collects a cake-message choice — same null-means-not-applicable
+  // handling already documented on orders.cake_message.
+  if (!catalogDesignId && cakeMessageChoice !== "none" && cakeMessageChoice !== "custom") {
     return errorResponse(400, "missing_cake_message_choice", "케이크 메시지 여부를 선택해 주세요.")
   }
   // "메시지 없음" ignores any accompanying text server-side, regardless
@@ -248,7 +260,11 @@ export async function POST(
     flavor_package: null,
   }
 
-  for (const kind of ["specification", "flavor_package"] as const) {
+  // A catalog selection (Direct Mode) never visits the Cake
+  // Configuration step that collects Specification/Flavor Package —
+  // its own spec is fixed by the catalog listing itself, so these stay
+  // unrequired and unresolved (null) for a catalog order.
+  for (const kind of catalogDesignId ? [] : (["specification", "flavor_package"] as const)) {
     const optionsForKind = enabledCakeOptions.filter((option) => option.kind === kind)
     if (optionsForKind.length === 0) {
       // Nothing enabled for this kind — not required, and nothing the
@@ -266,12 +282,52 @@ export async function POST(
     resolvedLabels[kind] = match.label
   }
 
+  // --- Resolve catalog design (Direct Mode), if selected ---------------
+  // Never trust the client for the image path or label — both are
+  // resolved here, from the database, exactly like Specification/Flavor
+  // Package above. A catalog design's photo was uploaded once by the
+  // store owner, not per-order, so it deliberately does NOT carry the
+  // `${store.id}/${orderId}/` ownership prefix the AI-preview check
+  // below expects — resolving it server-side sidesteps that check
+  // rather than weakening it.
+  let resolvedPreviewStoragePath = previewStoragePath ?? ""
+  let resolvedPreviewPrompt = previewPrompt ?? ""
+  let resolvedCatalogDesignLabel: string | null = null
+
+  if (catalogDesignId) {
+    const { data: catalogDesign, error: catalogDesignError } = await serviceRole
+      .from("store_catalog_designs")
+      .select("id, label, image_storage_path")
+      .eq("id", catalogDesignId)
+      .eq("store_id", store.id)
+      .eq("is_enabled", true)
+      .maybeSingle<{ id: string; label: string; image_storage_path: string }>()
+
+    if (catalogDesignError) {
+      console.error("[orders] catalog design lookup failed", catalogDesignError)
+      return errorResponse(500, "order_create_failed", "주문을 제출하지 못했습니다. 다시 시도해 주세요.")
+    }
+    if (!catalogDesign) {
+      return errorResponse(
+        400,
+        "catalog_design_unavailable",
+        "선택하신 디자인을 더 이상 주문할 수 없습니다. 다시 선택해 주세요."
+      )
+    }
+
+    resolvedPreviewStoragePath = catalogDesign.image_storage_path
+    resolvedPreviewPrompt = catalogDesign.label
+    resolvedCatalogDesignLabel = catalogDesign.label
+  }
+
   // The preview was already uploaded by a prior call to
   // .../ai-preview/save (see that route for why — this is the fix for
   // FUNCTION_PAYLOAD_TOO_LARGE). All this route gets is the resulting
   // path string; confirm it actually belongs to this store+order rather
-  // than trusting an arbitrary client-supplied path verbatim.
-  if (!previewStoragePath.startsWith(`${store.id}/${orderId}/`)) {
+  // than trusting an arbitrary client-supplied path verbatim. Skipped
+  // for a catalog design's path, which is resolved server-side above
+  // and never belongs to a single order in the first place.
+  if (!catalogDesignId && !resolvedPreviewStoragePath.startsWith(`${store.id}/${orderId}/`)) {
     return errorResponse(400, "invalid_preview_data", "선택한 미리보기 이미지가 올바르지 않습니다.")
   }
 
@@ -337,18 +393,21 @@ export async function POST(
     description,
     pickup_date: pickupDate,
     pickup_time: pickupTime,
-    ai_preview_storage_path: previewStoragePath,
-    ai_preview_prompt: previewPrompt,
+    ai_preview_storage_path: resolvedPreviewStoragePath,
+    ai_preview_prompt: resolvedPreviewPrompt,
     customer_note: customerNote || null,
     privacy_consent_given_at: new Date().toISOString(),
     // resolvedLabels[kind] is only ever set once the corresponding id
     // has already passed the store-scoped, enabled-only check above —
     // a stray id for a kind with nothing enabled is dropped, not stored.
+    // Both stay null for a catalog order (see the skipped loop above).
     specification_option_id: resolvedLabels.specification ? specificationOptionId : null,
     specification_label: resolvedLabels.specification,
     flavor_package_option_id: resolvedLabels.flavor_package ? flavorPackageOptionId : null,
     flavor_package_label: resolvedLabels.flavor_package,
     cake_message: cakeMessage,
+    catalog_design_id: resolvedCatalogDesignLabel ? catalogDesignId : null,
+    catalog_design_label: resolvedCatalogDesignLabel,
   })
 
   if (orderInsertError) {
@@ -361,8 +420,12 @@ export async function POST(
     }
 
     // Genuine failure, not a race — nothing will ever reference this
-    // upload, so roll it back.
-    await serviceRole.storage.from(PREVIEW_BUCKET).remove([previewStoragePath])
+    // upload, so roll it back. Skipped for a catalog design's image,
+    // which is store-owned and reused across orders, not per-order —
+    // rolling it back here would delete a photo other orders still need.
+    if (!catalogDesignId) {
+      await serviceRole.storage.from(PREVIEW_BUCKET).remove([resolvedPreviewStoragePath])
+    }
     // TEMPORARY — diagnosing the production order_create_failed
     // incident. The generic console.error(orderInsertError) wasn't
     // reliably surfacing which column/constraint Postgres/PostgREST

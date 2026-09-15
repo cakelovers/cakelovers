@@ -8,6 +8,7 @@ import { loadDraft, saveDraft } from "@/lib/wizard-persistence"
 import { WizardProgress } from "./WizardProgress"
 import { OrderCanvas, OrderCanvasText } from "./OrderCanvas"
 import { useCanvasFlip } from "./useCanvasFlip"
+import { useKeyboardInset } from "./useKeyboardInset"
 import { WIZARD_STEPS, type WizardData } from "./types"
 import { CakeConfigurationStep } from "./steps/CakeConfigurationStep"
 import { AiPreviewStep } from "./steps/AiPreviewStep"
@@ -150,6 +151,12 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
   useCanvasFlip(canvasRef)
 
+  // Keeps the fixed action bar pinned to the actually-visible bottom
+  // edge instead of sitting under the on-screen keyboard (see
+  // useKeyboardInset.ts) — a transform, not a `bottom` change, so it
+  // stays compositor-only.
+  const keyboardInset = useKeyboardInset()
+
   async function handleGenerate() {
     setIsGenerating(true)
     setGenerationError(null)
@@ -223,11 +230,13 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
         />
       </header>
 
-      <main className="flex-1 overflow-y-auto px-4 py-6 pb-28">
+      <main className="flex-1 overflow-y-auto scroll-pb-28 px-4 py-6 pb-28">
         {/* Persistent canvas — a stable sibling across every step, never
             unmounted by the step switch below. Content and size vary by
-            step; presence doesn't. */}
-        <div className="mb-6 flex justify-center">
+            step; presence doesn't. scroll-mt so a focused-input auto-
+            scroll (or a native "scroll into view") doesn't tuck it under
+            the sticky header above. */}
+        <div className="mb-6 flex scroll-mt-24 justify-center">
           <OrderCanvas ref={canvasRef} compact={currentStep.id === "pickup"}>
             {currentStep.id === "cakeConfig" && (
               <OrderCanvasText>
@@ -329,7 +338,16 @@ export function OrderWizard({ storeSlug }: OrderWizardProps) {
         )}
       </main>
 
-      <footer className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-md border-t bg-background px-4 py-3">
+      <footer
+        className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-md border-t bg-background px-4 pt-3"
+        style={{
+          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+          // Pinned to the visible bottom edge, not the layout viewport's —
+          // see useKeyboardInset.ts. transform, not `bottom`, so this
+          // stays compositor-only and never fights layout.
+          transform: keyboardInset > 0 ? `translateY(-${keyboardInset}px)` : undefined,
+        }}
+      >
         {!isLastStep && blockedReason && (
           <p className="mb-2 text-center text-xs text-muted-foreground">{blockedReason}</p>
         )}
